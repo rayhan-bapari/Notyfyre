@@ -2,7 +2,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rayhan-bapari/notyfyre.svg?style=flat-square)](https://packagist.org/packages/rayhan-bapari/notyfyre)
 [![Total Downloads](https://img.shields.io/packagist/dt/rayhan-bapari/notyfyre.svg?style=flat-square)](https://packagist.org/packages/rayhan-bapari/notyfyre)
-[![License](https://img.shields.io/packagist/l/rayhan-bapari/notyfyre.svg?style=flat-square)](https://packagist.org/packages/rayhan-bapari/notyfyre)
+[![License](https://img.shields.io/packagist/l/rayhan-bapari/notyfyre.svg?style=flat-square)](https://github.com/rayhan-bapari/Notyfyre/blob/main/LICENSE)
 
 A beautiful toast notification system for Laravel applications with animated transitions and progress bars.
 
@@ -142,14 +142,9 @@ composer test
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contributing
-
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
-
 ## Credits
 
 - [Rayhan Bapari](https://github.com/rayhan-bapari)
-- [All Contributors](../../contributors)
 - Based on [Toastify JS](https://github.com/apvarun/toastify-js)
 
 ## License
