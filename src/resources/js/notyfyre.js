@@ -1,5 +1,5 @@
 /*!
- * Notyfyre js 1.0.0
+ * Notyfyre js 1.0.2
  * https://github.com/rayhan-bapari/Notyfyre
  * @license MIT licensed
  *
@@ -19,7 +19,7 @@
 			return new Notyfyre.lib.init(options);
 		},
 		// Library version
-		version = '1.0.0';
+		version = '1.0.2';
 
 	// Set the default global options
 	Notyfyre.defaults = {
@@ -189,14 +189,8 @@
 					}.bind(this),
 				);
 
-				// Adding the close icon to the toast element
-				if (this.options.position === 'left') {
-					// Adding close icon on the left of content
-					divElement.insertAdjacentElement('afterbegin', closeElement);
-				} else {
-					// Adding close icon on the right of content
-					divElement.appendChild(closeElement);
-				}
+				// Always add close icon to the right side, regardless of position setting
+				divElement.appendChild(closeElement);
 			}
 
 			// Add progress bar
