@@ -1,5 +1,5 @@
 /*!
- * Notyfyre js 1.0.2
+ * Notyfyre js 1.1.0
  * https://github.com/rayhan-bapari/Notyfyre
  * @license MIT licensed
  *
@@ -19,7 +19,7 @@
 			return new Notyfyre.lib.init(options);
 		},
 		// Library version
-		version = '1.0.2';
+		version = '1.1.0';
 
 	// Set the default global options
 	Notyfyre.defaults = {
@@ -49,6 +49,11 @@
 			in: 'fadeIn',
 			out: 'fadeOut',
 		},
+		// New icon options
+		iconEnabled: false,
+		icon: null,
+		iconPosition: 'left', // left or right
+		iconSize: '24px',
 	};
 
 	// Defining the prototype of the object
@@ -98,6 +103,13 @@
 			this.options.progressBarColor = options.progressBarColor || Notyfyre.defaults.progressBarColor;
 			this.options.animation = options.animation || Notyfyre.defaults.animation;
 
+			// Icon options
+			this.options.iconEnabled =
+				options.iconEnabled !== undefined ? options.iconEnabled : Notyfyre.defaults.iconEnabled;
+			this.options.icon = options.icon || Notyfyre.defaults.icon;
+			this.options.iconPosition = options.iconPosition || Notyfyre.defaults.iconPosition;
+			this.options.iconSize = options.iconSize || Notyfyre.defaults.iconSize;
+
 			if (options.backgroundColor) {
 				this.options.style.background = options.backgroundColor;
 			}
@@ -115,7 +127,10 @@
 
 			// Creating the DOM object
 			var divElement = document.createElement('div');
-			divElement.className = 'notyfyre ' + this.options.animation.in;
+			divElement.className = 'notyfyre';
+
+			// Add animation class
+			divElement.className += ' ' + this.options.animation.in;
 
 			if (this.options.className) {
 				divElement.className += ' ' + this.options.className;
@@ -143,31 +158,49 @@
 				divElement.setAttribute('aria-live', this.options.ariaLive);
 			}
 
+			// Create a wrapper for message content (for better styling with icons)
+			var contentWrapper = document.createElement('div');
+			contentWrapper.className = 'notyfyre-content';
+
+			// Add icon if enabled
+			if (this.options.iconEnabled && this.options.icon) {
+				var iconWrapper = document.createElement('div');
+				iconWrapper.className = 'notyfyre-icon';
+				iconWrapper.style.width = this.options.iconSize;
+				iconWrapper.style.height = this.options.iconSize;
+				iconWrapper.innerHTML = this.options.icon;
+
+				// Always add icon at the beginning of the content wrapper
+				contentWrapper.appendChild(iconWrapper);
+			}
+
+			// Create message element
+			var messageElement = document.createElement('div');
+			messageElement.className = 'notyfyre-message';
+
 			// Adding the toast message/node
 			if (this.options.node && this.options.node.nodeType === Node.ELEMENT_NODE) {
 				// If we have a valid node, we insert it
-				divElement.appendChild(this.options.node);
+				messageElement.appendChild(this.options.node);
 			} else {
 				if (this.options.escapeMarkup) {
-					divElement.innerText = this.options.text;
+					messageElement.innerText = this.options.text;
 				} else {
-					divElement.innerHTML = this.options.text;
+					messageElement.innerHTML = this.options.text;
 				}
+			}
 
-				if (this.options.avatar !== '') {
-					var avatarElement = document.createElement('img');
-					avatarElement.src = this.options.avatar;
+			// Add message after icon
+			contentWrapper.appendChild(messageElement);
 
-					avatarElement.className = 'notyfyre-avatar';
+			// Add the content wrapper to the main element
+			divElement.appendChild(contentWrapper);
 
-					if (this.options.position === 'left') {
-						// Adding avatar on the left of content
-						divElement.appendChild(avatarElement);
-					} else {
-						// Adding avatar on the right of content
-						divElement.insertAdjacentElement('afterbegin', avatarElement);
-					}
-				}
+			if (this.options.avatar !== '') {
+				var avatarElement = document.createElement('img');
+				avatarElement.src = this.options.avatar;
+				avatarElement.className = 'notyfyre-avatar';
+				contentWrapper.insertBefore(avatarElement, contentWrapper.firstChild);
 			}
 
 			// Adding a close icon to the toast
@@ -189,7 +222,7 @@
 					}.bind(this),
 				);
 
-				// Always add close icon to the right side, regardless of position setting
+				// Always add close icon to the toast (outside the content wrapper)
 				divElement.appendChild(closeElement);
 			}
 
@@ -203,80 +236,6 @@
 				}
 
 				divElement.appendChild(progressElement);
-			}
-
-			// Clear timeout while toast is focused
-			if (this.options.stopOnFocus && this.options.duration > 0) {
-				var self = this;
-				// stop countdown
-				divElement.addEventListener('mouseover', function (event) {
-					window.clearTimeout(divElement.timeOutValue);
-
-					// Pause progress bar animation
-					if (self.options.progressBar) {
-						var progressElement = divElement.querySelector('.notyfyre-progress');
-						if (progressElement) {
-							var computedStyle = window.getComputedStyle(progressElement);
-							var width = computedStyle.getPropertyValue('width');
-							progressElement.style.transition = 'none';
-							progressElement.style.width = width;
-						}
-					}
-				});
-
-				// add back the timeout
-				divElement.addEventListener('mouseleave', function () {
-					// Get remaining time
-					var remainingTime = self.options.duration;
-
-					if (self.options.progressBar) {
-						var progressElement = divElement.querySelector('.notyfyre-progress');
-						if (progressElement) {
-							var computedStyle = window.getComputedStyle(progressElement);
-							var width = parseFloat(computedStyle.getPropertyValue('width'));
-							var totalWidth =
-								parseFloat(computedStyle.getPropertyValue('width')) +
-								parseFloat(computedStyle.getPropertyValue('padding-left')) +
-								parseFloat(computedStyle.getPropertyValue('padding-right'));
-
-							var percentage = width / totalWidth;
-							remainingTime = self.options.duration * percentage;
-
-							progressElement.style.transition = 'width ' + remainingTime + 'ms linear';
-							progressElement.style.width = '0%';
-						}
-					}
-
-					divElement.timeOutValue = window.setTimeout(function () {
-						// Remove the toast from DOM
-						self.removeElement(divElement);
-					}, remainingTime);
-				});
-			}
-
-			// Adding an on-click destination path
-			if (typeof this.options.destination !== 'undefined') {
-				divElement.addEventListener(
-					'click',
-					function (event) {
-						event.stopPropagation();
-						if (this.options.newWindow === true) {
-							window.open(this.options.destination, '_blank');
-						} else {
-							window.location = this.options.destination;
-						}
-					}.bind(this),
-				);
-			}
-
-			if (typeof this.options.onClick === 'function' && typeof this.options.destination === 'undefined') {
-				divElement.addEventListener(
-					'click',
-					function (event) {
-						event.stopPropagation();
-						this.options.onClick();
-					}.bind(this),
-				);
 			}
 
 			// Adding offset
@@ -338,6 +297,55 @@
 				}
 			}
 
+			// Clear timeout while toast is focused
+			if (this.options.stopOnFocus && this.options.duration > 0) {
+				var self = this;
+				// stop countdown
+				this.toastElement.addEventListener('mouseover', function (event) {
+					window.clearTimeout(self.toastElement.timeOutValue);
+
+					// Pause progress bar animation
+					if (self.options.progressBar) {
+						var progressElement = self.toastElement.querySelector('.notyfyre-progress');
+						if (progressElement) {
+							var computedStyle = window.getComputedStyle(progressElement);
+							var width = computedStyle.getPropertyValue('width');
+							progressElement.style.transition = 'none';
+							progressElement.style.width = width;
+						}
+					}
+				});
+
+				// add back the timeout
+				this.toastElement.addEventListener('mouseleave', function () {
+					// Get remaining time
+					var remainingTime = self.options.duration;
+
+					if (self.options.progressBar) {
+						var progressElement = self.toastElement.querySelector('.notyfyre-progress');
+						if (progressElement) {
+							var computedStyle = window.getComputedStyle(progressElement);
+							var width = parseFloat(computedStyle.getPropertyValue('width'));
+							var totalWidth =
+								parseFloat(computedStyle.getPropertyValue('width')) +
+								parseFloat(computedStyle.getPropertyValue('padding-left')) +
+								parseFloat(computedStyle.getPropertyValue('padding-right'));
+
+							var percentage = width / totalWidth;
+							remainingTime = self.options.duration * percentage;
+
+							progressElement.style.transition = 'width ' + remainingTime + 'ms linear';
+							progressElement.style.width = '0%';
+						}
+					}
+
+					self.toastElement.timeOutValue = window.setTimeout(function () {
+						// Remove the toast from DOM
+						self.removeElement(self.toastElement);
+					}, remainingTime);
+				});
+			}
+
 			if (this.options.duration > 0) {
 				this.toastElement.timeOutValue = window.setTimeout(
 					function () {
@@ -346,6 +354,31 @@
 					}.bind(this),
 					this.options.duration,
 				); // Binding `this` for function invocation
+			}
+
+			// Adding an on-click destination path
+			if (typeof this.options.destination !== 'undefined') {
+				this.toastElement.addEventListener(
+					'click',
+					function (event) {
+						event.stopPropagation();
+						if (this.options.newWindow === true) {
+							window.open(this.options.destination, '_blank');
+						} else {
+							window.location = this.options.destination;
+						}
+					}.bind(this),
+				);
+			}
+
+			if (typeof this.options.onClick === 'function' && typeof this.options.destination === 'undefined') {
+				this.toastElement.addEventListener(
+					'click',
+					function (event) {
+						event.stopPropagation();
+						this.options.onClick();
+					}.bind(this),
+				);
 			}
 
 			// Supporting function chaining

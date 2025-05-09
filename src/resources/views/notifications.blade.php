@@ -14,10 +14,16 @@
             // Convert snake_case keys to camelCase for JavaScript
             var jsOptions = {};
             for (var key in options) {
-                var jsKey = key.replace(/_([a-z])/g, function(g) {
-                    return g[1].toUpperCase();
-                });
-                jsOptions[jsKey] = options[key];
+                if (key === 'icon' || key === 'onClick') {
+                    // Pass icon and onClick directly without modification
+                    jsOptions[key] = options[key];
+                } else {
+                    // Convert other keys from snake_case to camelCase
+                    var jsKey = key.replace(/_([a-z])/g, function(g) {
+                        return g[1].toUpperCase();
+                    });
+                    jsOptions[jsKey] = options[key];
+                }
             }
 
             Notyfyre(jsOptions).showToast();

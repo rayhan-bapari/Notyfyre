@@ -36,6 +36,14 @@ class Notyfyre
         foreach ($defaults as $key => $value) {
             $this->options[$key] = $value;
         }
+
+        // Set default icon settings
+        $iconConfig = Config::get('notyfyre.icons', []);
+        if (isset($iconConfig['enabled']) && $iconConfig['enabled']) {
+            $this->options['icon_enabled'] = true;
+            $this->options['icon_position'] = $iconConfig['position'] ?? 'left';
+            $this->options['icon_size'] = $iconConfig['size'] ?? '24px';
+        }
     }
 
     /**
@@ -56,6 +64,15 @@ class Notyfyre
 
         if (isset($typeConfig['class'])) {
             $notification->className($typeConfig['class']);
+        }
+
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['success'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
         }
 
         return $notification;
@@ -81,6 +98,15 @@ class Notyfyre
             $notification->className($typeConfig['class']);
         }
 
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['error'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
+        }
+
         return $notification;
     }
 
@@ -102,6 +128,15 @@ class Notyfyre
 
         if (isset($typeConfig['class'])) {
             $notification->className($typeConfig['class']);
+        }
+
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['warning'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
         }
 
         return $notification;
@@ -127,7 +162,68 @@ class Notyfyre
             $notification->className($typeConfig['class']);
         }
 
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['info'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
+        }
+
         return $notification;
+    }
+
+    /**
+     * Set the notification icon.
+     *
+     * @param string $iconHtml HTML or SVG for the icon
+     * @return self
+     */
+    public function icon($iconHtml)
+    {
+        $this->options['icon'] = $iconHtml;
+        $this->options['icon_enabled'] = true;
+
+        return $this;
+    }
+
+    /**
+     * Set the notification icon position.
+     *
+     * @param string $position left|right
+     * @return self
+     */
+    public function iconPosition($position)
+    {
+        $this->options['icon_position'] = $position;
+
+        return $this;
+    }
+
+    /**
+     * Set the notification icon size.
+     *
+     * @param string $size CSS size value (e.g., '24px', '1.5rem')
+     * @return self
+     */
+    public function iconSize($size)
+    {
+        $this->options['icon_size'] = $size;
+
+        return $this;
+    }
+
+    /**
+     * Disable the notification icon.
+     *
+     * @return self
+     */
+    public function noIcon()
+    {
+        $this->options['icon_enabled'] = false;
+
+        return $this;
     }
 
     /**

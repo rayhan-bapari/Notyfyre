@@ -1,74 +1,117 @@
 /*!
- * Notyfyre css 1.0.2
+ * Notyfyre css 1.1.0
  * https://github.com/rayhan-bapari/Notyfyre
  * @license MIT licensed
  *
  * Copyright (C) 2025 Rayhan Bapari
  */
 .notyfyre {
-	padding: 12px 20px;
+	padding: 12px 16px;
 	color: #ffffff;
-	display: inline-block;
-	box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.12), 0 10px 36px -4px rgba(77, 96, 232, 0.3);
+	display: flex;
+	align-items: center;
+	box-shadow: 0 3px 15px -2px rgba(0, 0, 0, 0.12), 0 10px 36px -10px rgba(77, 96, 232, 0.25);
 	background: linear-gradient(135deg, #73a5ff, #5477f5);
 	position: fixed;
 	opacity: 0;
-	transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
-	border-radius: 6px;
+	transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+	border-radius: 8px;
 	cursor: pointer;
 	text-decoration: none;
 	max-width: calc(50% - 20px);
 	z-index: 2147483647;
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+		'Helvetica Neue', sans-serif;
+	will-change: transform, opacity;
+}
+
+/* Content wrapper for better icon alignment */
+.notyfyre-content {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	gap: 12px;
+}
+
+/* Icon styling */
+.notyfyre-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+}
+
+.notyfyre-icon svg {
+	width: 100%;
+	height: 100%;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+}
+
+/* Message styling */
+.notyfyre-message {
+	font-size: 0.95rem;
+	line-height: 1.4;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	flex: 1;
 }
 
 /* Animation classes */
 .fadeIn {
-	animation: fadeIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: fadeIn 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .fadeOut {
-	animation: fadeOut 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: fadeOut 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .slideInRight {
-	animation: slideInRight 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: slideInRight 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .slideOutRight {
-	animation: slideOutRight 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: slideOutRight 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .slideInLeft {
-	animation: slideInLeft 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: slideInLeft 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .slideOutLeft {
-	animation: slideOutLeft 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+	animation: slideOutLeft 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 .bounceIn {
-	animation: bounceIn 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+	animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
 }
 
 .bounceOut {
-	animation: bounceOut 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+	animation: bounceOut 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
 }
 
 @keyframes fadeIn {
 	from {
 		opacity: 0;
+		transform: translateY(-10px);
 	}
 	to {
 		opacity: 1;
+		transform: translateY(0);
 	}
 }
 
 @keyframes fadeOut {
 	from {
 		opacity: 1;
+		transform: translateY(0);
 	}
 	to {
 		opacity: 0;
+		transform: translateY(-10px);
 	}
 }
 
@@ -118,14 +161,14 @@
 
 @keyframes bounceIn {
 	0% {
-		transform: scale(0.3);
+		transform: scale(0.8);
 		opacity: 0;
 	}
 	40% {
-		transform: scale(1.1);
+		transform: scale(1.08);
 	}
 	80% {
-		transform: scale(0.9);
+		transform: scale(0.95);
 	}
 	100% {
 		transform: scale(1);
@@ -135,14 +178,14 @@
 
 @keyframes bounceOut {
 	20% {
-		transform: scale(0.9);
+		transform: scale(0.95);
 	}
 	50% {
-		transform: scale(1.1);
+		transform: scale(1.08);
 		opacity: 1;
 	}
 	100% {
-		transform: scale(0.3);
+		transform: scale(0.8);
 		opacity: 0;
 	}
 }
@@ -154,9 +197,9 @@
 	left: 0;
 	height: 4px;
 	width: 100%;
-	background: rgba(255, 255, 255, 0.5);
-	border-radius: 0 0 6px 6px;
-	transition: width 300ms ease-in-out;
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 0 0 8px 8px;
+	transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .notyfyre-close {
@@ -164,23 +207,30 @@
 	border: 0;
 	color: white;
 	cursor: pointer;
-	font-family: inherit;
-	font-size: 1em;
-	opacity: 0.4;
-	padding: 0 5px;
-	transition: opacity 0.3s ease;
+	font-size: 1rem;
+	opacity: 0.5;
+	padding: 0 0 0 10px;
+	transition: opacity 0.2s ease;
+	margin-left: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
 }
 
 .notyfyre-close:hover {
 	opacity: 1;
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .notyfyre-right {
-	right: 15px;
+	right: 20px;
 }
 
 .notyfyre-left {
-	left: 15px;
+	left: 20px;
 }
 
 .notyfyre-center {
@@ -189,48 +239,52 @@
 }
 
 .notyfyre-top {
-	top: 15px;
+	top: 20px;
 }
 
 .notyfyre-bottom {
-	bottom: 15px;
+	bottom: 20px;
 }
 
 .notyfyre-rounded {
-	border-radius: 25px;
+	border-radius: 100px;
 }
 
 .notyfyre-avatar {
-	width: 1.5em;
-	height: 1.5em;
-	margin: -7px 5px;
-	border-radius: 2px;
+	width: 24px;
+	height: 24px;
+	border-radius: 4px;
 }
 
-/* Types */
+/* Types with updated gradients */
 .notyfyre-success {
 	background: linear-gradient(135deg, #42e695, #3bb2b8);
 }
 
 .notyfyre-error {
-	background: linear-gradient(135deg, #ff7676, #f54ea2);
+	background: linear-gradient(135deg, #ff5e7a, #ff3c6f);
 }
 
 .notyfyre-warning {
-	background: linear-gradient(135deg, #ffd166, #f0a500);
+	background: linear-gradient(135deg, #ffca3a, #ff9a3a);
 }
 
 .notyfyre-info {
 	background: linear-gradient(135deg, #73a5ff, #5477f5);
 }
 
-@media only screen and (max-width: 360px) {
+/* Mobile responsiveness improvements */
+@media only screen and (max-width: 576px) {
+	.notyfyre {
+		max-width: calc(100% - 40px);
+		width: calc(100% - 40px);
+	}
+
 	.notyfyre-right,
-	.notyfyre-left {
-		margin-left: auto;
-		margin-right: auto;
-		left: 0;
-		right: 0;
-		max-width: fit-content;
+	.notyfyre-left,
+	.notyfyre-center {
+		left: 50%;
+		transform: translateX(-50%);
+		right: auto;
 	}
 }
