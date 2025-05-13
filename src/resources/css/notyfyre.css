@@ -1,290 +1,202 @@
 /*!
- * Notyfyre css 1.1.0
+ * Notyfyre css 1.2.0
  * https://github.com/rayhan-bapari/Notyfyre
  * @license MIT licensed
  *
  * Copyright (C) 2025 Rayhan Bapari
+ * Toast functionality inspired by ZephyrToast
  */
+
+/* Import animations */
+@import url('notyfyre-animations.css');
+
+/* Base Toast Container and Positioning */
+.notyfyre-container {
+    position: fixed;
+    z-index: 9999;
+    padding: 15px;
+    overflow: hidden;
+    min-width: fit-content;
+}
+
+.notyfyre-position-right-top {
+    top: 0px;
+    right: 0px;
+}
+
+.notyfyre-position-left-top {
+    top: 0px;
+    left: 0px;
+}
+
+.notyfyre-position-right-bottom {
+    bottom: 0px;
+    right: 0px;
+}
+
+.notyfyre-position-left-bottom {
+    bottom: 0px;
+    left: 0px;
+}
+
+.notyfyre-position-center-top {
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.notyfyre-position-center-bottom {
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Toast Notification */
 .notyfyre {
-	padding: 12px 16px;
-	color: #ffffff;
-	display: flex;
-	align-items: center;
-	box-shadow: 0 3px 15px -2px rgba(0, 0, 0, 0.12), 0 10px 36px -10px rgba(77, 96, 232, 0.25);
-	background: linear-gradient(135deg, #73a5ff, #5477f5);
-	position: fixed;
-	opacity: 0;
-	transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-	border-radius: 8px;
-	cursor: pointer;
-	text-decoration: none;
-	max-width: calc(50% - 20px);
-	z-index: 2147483647;
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
-		'Helvetica Neue', sans-serif;
-	will-change: transform, opacity;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: fit-content;
+    opacity: 0;
+    border-width: 1px;
+    border-style: solid;
+    pointer-events: auto;
+    color: #ffffff;
 }
 
-/* Content wrapper for better icon alignment */
-.notyfyre-content {
-	display: flex;
-	align-items: center;
-	flex: 1;
-	gap: 12px;
+.notyfyre-body {
+    padding: 0.75rem;
+    display: flex;
 }
 
-/* Icon styling */
 .notyfyre-icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 24px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    min-width: 24px;
 }
 
 .notyfyre-icon svg {
-	width: 100%;
-	height: 100%;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 2;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
 }
 
-/* Message styling */
+.notyfyre-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .notyfyre-message {
-	font-size: 0.95rem;
-	line-height: 1.4;
-	font-weight: 500;
-	letter-spacing: 0.01em;
-	flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    flex: 1;
 }
 
-/* Animation classes */
-.fadeIn {
-	animation: fadeIn 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+.notyfyre-title {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
 }
 
-.fadeOut {
-	animation: fadeOut 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+.notyfyre-close {
+    background: transparent;
+    border: 0;
+    color: white;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    align-self: flex-start;
+    margin-left: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    opacity: 0.7;
 }
 
-.slideInRight {
-	animation: slideInRight 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
-
-.slideOutRight {
-	animation: slideOutRight 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
-
-.slideInLeft {
-	animation: slideInLeft 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
-
-.slideOutLeft {
-	animation: slideOutLeft 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
-
-.bounceIn {
-	animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-}
-
-.bounceOut {
-	animation: bounceOut 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-}
-
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes fadeOut {
-	from {
-		opacity: 1;
-		transform: translateY(0);
-	}
-	to {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-}
-
-@keyframes slideInRight {
-	from {
-		transform: translateX(100%);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
-}
-
-@keyframes slideOutRight {
-	from {
-		transform: translateX(0);
-		opacity: 1;
-	}
-	to {
-		transform: translateX(100%);
-		opacity: 0;
-	}
-}
-
-@keyframes slideInLeft {
-	from {
-		transform: translateX(-100%);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
-}
-
-@keyframes slideOutLeft {
-	from {
-		transform: translateX(0);
-		opacity: 1;
-	}
-	to {
-		transform: translateX(-100%);
-		opacity: 0;
-	}
-}
-
-@keyframes bounceIn {
-	0% {
-		transform: scale(0.8);
-		opacity: 0;
-	}
-	40% {
-		transform: scale(1.08);
-	}
-	80% {
-		transform: scale(0.95);
-	}
-	100% {
-		transform: scale(1);
-		opacity: 1;
-	}
-}
-
-@keyframes bounceOut {
-	20% {
-		transform: scale(0.95);
-	}
-	50% {
-		transform: scale(1.08);
-		opacity: 1;
-	}
-	100% {
-		transform: scale(0.8);
-		opacity: 0;
-	}
+.notyfyre-close:hover {
+    opacity: 1;
 }
 
 /* Progress bar */
 .notyfyre-progress {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	height: 4px;
-	width: 100%;
-	background: rgba(255, 255, 255, 0.3);
-	border-radius: 0 0 8px 8px;
-	transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    height: 5px;
+    background-color: rgba(0, 0, 0, 0.15);
+    position: relative;
 }
 
-.notyfyre-close {
-	background: transparent;
-	border: 0;
-	color: white;
-	cursor: pointer;
-	font-size: 1rem;
-	opacity: 0.5;
-	padding: 0 0 0 10px;
-	transition: opacity 0.2s ease;
-	margin-left: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 50%;
-	width: 20px;
-	height: 20px;
+.notyfyre-progress-fill {
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.075);
+    transition: width linear;
+    width: 100%;
 }
 
-.notyfyre-close:hover {
-	opacity: 1;
-	background: rgba(255, 255, 255, 0.1);
+.notyfyre-void-progress {
+    height: 5px;
+    background-color: rgba(75, 84, 88, 1);
+    position: relative;
 }
 
-.notyfyre-right {
-	right: 20px;
+.notyfyre-void-progress-fill {
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.15);
+    transition: width linear;
+    width: 100%;
 }
 
-.notyfyre-left {
-	left: 20px;
-}
-
-.notyfyre-center {
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.notyfyre-top {
-	top: 20px;
-}
-
-.notyfyre-bottom {
-	bottom: 20px;
-}
-
-.notyfyre-rounded {
-	border-radius: 100px;
-}
-
-.notyfyre-avatar {
-	width: 24px;
-	height: 24px;
-	border-radius: 4px;
-}
-
-/* Types with updated gradients */
+/* Toast Types with updated gradients */
 .notyfyre-success {
-	background: linear-gradient(135deg, #42e695, #3bb2b8);
+    background: linear-gradient(135deg, #42e695, #3bb2b8);
+    border-color: #b5eace;
 }
 
 .notyfyre-error {
-	background: linear-gradient(135deg, #ff5e7a, #ff3c6f);
+    background: linear-gradient(135deg, #ff5e7a, #ff3c6f);
+    border-color: #f9c1b6;
 }
 
 .notyfyre-warning {
-	background: linear-gradient(135deg, #ffca3a, #ff9a3a);
+    background: linear-gradient(135deg, #ffca3a, #ff9a3a);
+    border-color: #ffe59d;
 }
 
 .notyfyre-info {
-	background: linear-gradient(135deg, #73a5ff, #5477f5);
+    background: linear-gradient(135deg, #73a5ff, #5477f5);
+    border-color: #a9d7f1;
+}
+
+.notyfyre-zen {
+    background: linear-gradient(135deg, #f4f7f9, #e6eaef);
+    color: #2e3a59;
+    border-color: #d8e1e8;
+}
+
+.notyfyre-void {
+    background: #111113;
+    color: #f1f1f1;
+    border-color: #111113;
 }
 
 /* Mobile responsiveness improvements */
 @media only screen and (max-width: 576px) {
-	.notyfyre {
-		max-width: calc(100% - 40px);
-		width: calc(100% - 40px);
-	}
+    .notyfyre-container {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 10px !important;
+    }
 
-	.notyfyre-right,
-	.notyfyre-left,
-	.notyfyre-center {
-		left: 50%;
-		transform: translateX(-50%);
-		right: auto;
-	}
+    .notyfyre {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
 }

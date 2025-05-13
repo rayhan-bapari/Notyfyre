@@ -1,0 +1,391 @@
+/*!
+ * Notyfyre Animations 1.2.0
+ * https://github.com/rayhan-bapari/Notyfyre
+ * @license MIT licensed
+ *
+ * Copyright (C) 2025 Rayhan Bapari
+ * Animation system inspired by ZephyrToast
+ */
+
+/* Base Animation Class */
+.notyfyre-animate {
+    animation-duration: 0.75s;
+    animation-fill-mode: both;
+}
+
+/* Fade Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.notyfyre-fade-in {
+    animation-name: fadeIn;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.notyfyre-fade-out {
+    animation-name: fadeOut;
+}
+
+/* Slide Left Animations */
+@keyframes slideInLeft {
+    from {
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre-slide-in-left {
+    animation-name: slideInLeft;
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+
+.notyfyre-slide-out-left {
+    animation-name: slideOutLeft;
+}
+
+/* Slide Right Animations */
+@keyframes slideInRight {
+    from {
+        transform: translate3d(100%, 0, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre-slide-in-right {
+    animation-name: slideInRight;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(100%, 0, 0);
+    }
+}
+
+.notyfyre-slide-out-right {
+    animation-name: slideOutRight;
+}
+
+/* Slide Down/Up Animations */
+@keyframes slideInDown {
+    from {
+        transform: translate3d(0, -100%, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre-slide-in-down {
+    animation-name: slideInDown;
+}
+
+@keyframes slideOutUp {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(0, -100%, 0);
+    }
+}
+
+.notyfyre-slide-out-up {
+    animation-name: slideOutUp;
+}
+
+/* Slide Up/Down Animations */
+@keyframes slideInUp {
+    from {
+        transform: translate3d(0, 100%, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre-slide-in-up {
+    animation-name: slideInUp;
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(0, 100%, 0);
+    }
+}
+
+.notyfyre-slide-out-down {
+    animation-name: slideOutDown;
+}
+
+/* Bounce Animations */
+@keyframes bounceIn {
+    from,
+    20%,
+    40%,
+    60%,
+    80%,
+    to {
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    0% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    20% {
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    40% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    60% {
+        opacity: 1;
+        transform: scale3d(1.03, 1.03, 1.03);
+    }
+    80% {
+        transform: scale3d(0.97, 0.97, 0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre-bounce-in {
+    animation-name: bounceIn;
+    animation-duration: 0.75s;
+}
+
+@keyframes bounceOut {
+    20% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    50%,
+    55% {
+        opacity: 1;
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    to {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+}
+
+.notyfyre-bounce-out {
+    animation-name: bounceOut;
+    animation-duration: 0.75s;
+}
+
+/* Zoom Animations */
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    50% {
+        opacity: 1;
+    }
+    to {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre-zoom-in {
+    animation-name: zoomIn;
+}
+
+@keyframes zoomOut {
+    from {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.notyfyre-zoom-out {
+    animation-name: zoomOut;
+}
+
+/* Flip Animations */
+@keyframes flipIn {
+    from {
+        transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+        animation-timing-function: ease-in;
+        opacity: 0;
+    }
+    40% {
+        transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+        animation-timing-function: ease-in;
+    }
+    60% {
+        transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+        opacity: 1;
+    }
+    80% {
+        transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+    }
+    to {
+        transform: perspective(400px);
+    }
+}
+
+.notyfyre-flip-in {
+    animation-name: flipIn;
+    backface-visibility: visible !important;
+}
+
+@keyframes flipOut {
+    from {
+        transform: perspective(400px);
+    }
+    30% {
+        transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+        opacity: 1;
+    }
+    to {
+        transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+        opacity: 0;
+    }
+}
+
+.notyfyre-flip-out {
+    animation-name: flipOut;
+    backface-visibility: visible !important;
+}
+
+/* Swing Animation */
+@keyframes swing {
+    20% {
+        transform: rotate3d(0, 0, 1, 15deg);
+    }
+    40% {
+        transform: rotate3d(0, 0, 1, -10deg);
+    }
+    60% {
+        transform: rotate3d(0, 0, 1, 5deg);
+    }
+    80% {
+        transform: rotate3d(0, 0, 1, -5deg);
+    }
+    to {
+        transform: rotate3d(0, 0, 1, 0deg);
+    }
+}
+
+.notyfyre-swing {
+    transform-origin: top center;
+    animation-name: swing;
+}
+
+/* Tada Animation */
+@keyframes tada {
+    from {
+        transform: scale3d(1, 1, 1);
+    }
+    10%, 20% {
+        transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg);
+    }
+    30%, 50%, 70%, 90% {
+        transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+    }
+    40%, 60%, 80% {
+        transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+    }
+    to {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre-tada {
+    animation-name: tada;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    from {
+        transform: scale3d(1, 1, 1);
+    }
+    50% {
+        transform: scale3d(1.05, 1.05, 1.05);
+    }
+    to {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre-pulse {
+    animation-name: pulse;
+    animation-timing-function: ease-in-out;
+}
+
+/* Rubber Band Animation */
+@keyframes rubberBand {
+    from {
+        transform: scale3d(1, 1, 1);
+    }
+    30% {
+        transform: scale3d(1.25, 0.75, 1);
+    }
+    40% {
+        transform: scale3d(0.75, 1.25, 1);
+    }
+    50% {
+        transform: scale3d(1.15, 0.85, 1);
+    }
+    65% {
+        transform: scale3d(0.95, 1.05, 1);
+    }
+    75% {
+        transform: scale3d(1.05, 0.95, 1);
+    }
+    to {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre-rubber-band {
+    animation-name: rubberBand;
+}
