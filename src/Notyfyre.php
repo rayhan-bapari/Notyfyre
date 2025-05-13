@@ -2,33 +2,51 @@
 
 namespace RayhanBapari\Notyfyre;
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
 
 class Notyfyre
 {
     /**
-     * Notification message.
+     * The toast notification type.
      *
      * @var string|null
      */
-    protected $message;
+    protected $type = 'info';
 
     /**
-     * Notification options.
+     * The toast notification message.
+     *
+     * @var string|null
+     */
+    protected $message = null;
+
+    /**
+     * The toast notification options.
      *
      * @var array
      */
     protected $options = [];
 
     /**
-     * Create a new notification instance.
+     * Create a new Notyfyre instance.
      *
-     * @param string|null $message
+     * @param string $message
      * @return void
      */
-    public function __construct($message = null)
+    public function __construct()
     {
+        $this->options = config('notyfyre.defaults', []);
+    }
+
+    /**
+     * Create a success toast notification.
+     *
+     * @param string|null $message
+     * @return $this
+     */
+    public function success(string $message = null)
+    {
+        $this->type = 'success';
         $this->message = $message;
 
         // Load default options from config
@@ -40,356 +58,637 @@ class Notyfyre
         // Set default icon settings
         $iconConfig = Config::get('notyfyre.icons', []);
         if (isset($iconConfig['enabled']) && $iconConfig['enabled']) {
-            $this->options['iconEnabled'] = true;
-            $this->options['iconPosition'] = $iconConfig['position'] ?? 'left';
-            $this->options['iconSize'] = $iconConfig['size'] ?? '24px';
+            $this->options['icon_enabled'] = true;
+            $this->options['icon_position'] = $iconConfig['position'] ?? 'left';
+            $this->options['icon_size'] = $iconConfig['size'] ?? '24px';
         }
     }
 
     /**
      * Create a new success notification.
      *
-     * @param string|null $message
+     * @param string $message
      * @return self
      */
     public static function success($message = null)
     {
         $notification = new self($message);
-        return $notification->applyType('success');
+
+        $typeConfig = Config::get('notyfyre.types.success', []);
+
+        if (isset($typeConfig['background'])) {
+            $notification->style(['background' => $typeConfig['background']]);
+        }
+
+        if (isset($typeConfig['class'])) {
+            $notification->className($typeConfig['class']);
+        }
+
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['success'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
+        }
+
+        return $notification;
     }
 
     /**
-     * Create a new error notification.
+     * Create a warning toast notification.
      *
-     * @param string|null $message
+     * @param string $message
      * @return self
      */
     public static function error($message = null)
     {
         $notification = new self($message);
-        return $notification->applyType('error');
-    }
 
-    /**
-     * Create a new warning notification.
-     *
-     * @param string|null $message
-     * @return self
-     */
-    public static function warning($message = null)
-    {
-        $notification = new self($message);
-        return $notification->applyType('warning');
-    }
+        $typeConfig = Config::get('notyfyre.types.error', []);
 
-    /**
-     * Create a new info notification.
-     *
-     * @param string|null $message
-     * @return self
-     */
-    public static function info($message = null)
-    {
-        $notification = new self($message);
-        return $notification->applyType('info');
-    }
-
-    /**
-     * Apply notification type configuration.
-     *
-     * @param string $type
-     * @return self
-     */
-    protected function applyType($type)
-    {
-        $typeConfig = Config::get("notyfyre.types.{$type}", []);
-
-        // Apply background if configured
         if (isset($typeConfig['background'])) {
-            $this->style(['background' => $typeConfig['background']]);
+            $notification->style(['background' => $typeConfig['background']]);
         }
 
-        // Apply CSS class if configured
         if (isset($typeConfig['class'])) {
-            $this->className($typeConfig['class']);
+            $notification->className($typeConfig['class']);
         }
 
-        // Apply icon if enabled
-        if ($this->options['iconEnabled'] ?? false) {
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
             $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $icon = $typeConfig['icon'] ?? ($defaultIcons[$type] ?? null);
-
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['error'] ?? null);
             if ($icon) {
-                $this->icon($icon);
+                $notification->icon($icon);
             }
         }
 
-        return $this;
+        return $notification;
+    }
+
+    /**
+     * Create an info toast notification.
+     *
+     * @param string $message
+     * @return self
+     */
+    public function info(string $message = null)
+    {
+        $notification = new self($message);
+
+        $typeConfig = Config::get('notyfyre.types.warning', []);
+
+        if (isset($typeConfig['background'])) {
+            $notification->style(['background' => $typeConfig['background']]);
+        }
+
+        if (isset($typeConfig['class'])) {
+            $notification->className($typeConfig['class']);
+        }
+
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['warning'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
+        }
+
+        return $notification;
+    }
+
+    /**
+     * Create a zen toast notification.
+     *
+     * @param string $message
+     * @return self
+     */
+    public function zen(string $message = null)
+    {
+        $notification = new self($message);
+
+        $typeConfig = Config::get('notyfyre.types.info', []);
+
+        if (isset($typeConfig['background'])) {
+            $notification->style(['background' => $typeConfig['background']]);
+        }
+
+        if (isset($typeConfig['class'])) {
+            $notification->className($typeConfig['class']);
+        }
+
+        // Set default icon if enabled
+        if ($notification->options['icon_enabled'] ?? false) {
+            $defaultIcons = Config::get('notyfyre.icons.default', []);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons['info'] ?? null);
+            if ($icon) {
+                $notification->icon($icon);
+            }
+        }
+
+        return $notification;
     }
 
     /**
      * Set the notification icon.
      *
-     * @param string $iconHtml HTML or SVG for the icon
-     * @return self
+     * @param string|null $message
+     * @return $this
      */
-    public function icon($iconHtml)
+    public function void(string $message = null)
     {
         $this->options['icon'] = $iconHtml;
-        $this->options['iconEnabled'] = true;
+        $this->options['icon_enabled'] = true;
 
         return $this;
     }
 
     /**
-     * Set the notification icon position.
-     *
-     * @param string $position left|right
-     * @return self
-     */
-    public function iconPosition($position)
-    {
-        $this->options['iconPosition'] = $position;
-
-        return $this;
-    }
-
-    /**
-     * Set the notification icon size.
-     *
-     * @param string $size CSS size value (e.g., '24px', '1.5rem')
-     * @return self
-     */
-    public function iconSize($size)
-    {
-        $this->options['iconSize'] = $size;
-
-        return $this;
-    }
-
-    /**
-     * Disable the notification icon.
-     *
-     * @return self
-     */
-    public function noIcon()
-    {
-        $this->options['iconEnabled'] = false;
-
-        return $this;
-    }
-
-    /**
-     * Set the notification message.
+     * Set the toast notification message.
      *
      * @param string $message
-     * @return self
+     * @return $this
      */
-    public function message($message)
+    public function message(string $message)
     {
-        $this->message = $message;
+        $this->options['icon_position'] = $position;
 
         return $this;
     }
 
     /**
-     * Set the notification duration.
+     * Create a toast notification with custom HTML content.
+     *
+     * @param string $html
+     * @return $this
+     */
+    public function customHtml(string $html)
+    {
+        $this->options['icon_size'] = $size;
+
+        return $this;
+    }
+
+    /**
+     * Create a toast notification with a custom HTML node.
+     *
+     * @param string $htmlContent HTML content for the node
+     * @param string $className Optional class name for the node
+     * @return $this
+     */
+    public function node(string $htmlContent, string $className = '')
+    {
+        $this->options['icon_enabled'] = false;
+
+        return $this;
+    }
+
+    /**
+     * Create a toast notification with a custom HTML node using options.
+     *
+     * @param array $options Node configuration options
+     * @return $this
+     */
+    public function htmlNode(array $options)
+    {
+        $this->options['html_node'] = $options;
+        return $this;
+    }
+
+    /**
+     * Set the toast notification duration.
      *
      * @param int $milliseconds
-     * @return self
+     * @return $this
      */
-    public function duration($milliseconds)
+    public function duration(int $milliseconds)
     {
         $this->options['duration'] = $milliseconds;
-
         return $this;
     }
 
     /**
-     * Set the notification position.
+     * Set the toast notification position.
      *
-     * @param string $position left|right|center
-     * @return self
+     * @param string $position
+     * @return $this
      */
-    public function position($position)
+    public function position(string $position)
     {
         $this->options['position'] = $position;
-
         return $this;
     }
 
     /**
-     * Set the notification gravity.
+     * Set the toast notification gravity.
      *
-     * @param string $gravity top|bottom
-     * @return self
+     * @param string $gravity
+     * @return $this
      */
-    public function gravity($gravity)
+    public function gravity(string $gravity)
     {
         $this->options['gravity'] = $gravity;
-
         return $this;
     }
 
     /**
-     * Set the notification close button visibility.
+     * Set the toast notification close button visibility.
      *
      * @param bool $show
-     * @return self
+     * @return $this
      */
-    public function close($show = true)
+    public function close(bool $show = true)
     {
         $this->options['close'] = $show;
-
         return $this;
     }
 
     /**
-     * Set the notification progress bar visibility.
+     * Set the toast notification progress bar visibility.
      *
      * @param bool $show
-     * @return self
+     * @return $this
      */
-    public function progressBar($show = true)
+    public function progressBar(bool $show = true)
     {
-        $this->options['progressBar'] = $show;
+        $this->options['progress_bar'] = $show;
 
         return $this;
     }
 
     /**
-     * Set the notification progress bar color.
+     * Set the toast notification progress bar color.
      *
      * @param string $color
-     * @return self
+     * @return $this
      */
-    public function progressBarColor($color)
+    public function progressBarColor(string $color)
     {
-        $this->options['progressBarColor'] = $color;
+        $this->options['progress_bar_color'] = $color;
 
         return $this;
     }
 
     /**
-     * Set the notification destination URL.
+     * Set the toast notification destination URL.
      *
      * @param string $url
      * @param bool $newWindow
-     * @return self
+     * @return $this
      */
-    public function destination($url, $newWindow = false)
+    public function destination(string $url, bool $newWindow = false)
     {
         $this->options['destination'] = $url;
-        $this->options['newWindow'] = $newWindow;
+        $this->options['new_window'] = $newWindow;
 
         return $this;
     }
 
     /**
-     * Set whether to stop notification timeout on hover.
+     * Set if the toast notification stops on focus.
      *
      * @param bool $stop
-     * @return self
+     * @return $this
      */
-    public function stopOnFocus($stop = true)
+    public function stopOnFocus(bool $stop = true)
     {
-        $this->options['stopOnFocus'] = $stop;
+        $this->options['stop_on_focus'] = $stop;
 
         return $this;
     }
 
     /**
-     * Set the notification animations.
+     * Set the toast notification animation.
      *
-     * @param string $in fadeIn|slideInLeft|slideInRight|bounceIn
-     * @param string $out fadeOut|slideOutLeft|slideOutRight|bounceOut
-     * @return self
+     * @param string $in
+     * @param string $out
+     * @return $this
      */
-    public function animation($in, $out)
+    public function animation(string $in, string $out)
     {
         $this->options['animation'] = [
             'in' => $in,
-            'out' => $out
+            'out' => $out,
         ];
+        return $this;
+    }
+
+    /**
+     * Set predefined animation pair from config.
+     *
+     * @param string $name
+     * @return $this
+     */
+    public function animationSet(string $name)
+    {
+        $animations = config('notyfyre.animations', []);
+
+        if (isset($animations[$name]) && is_array($animations[$name])) {
+            $this->options['animation'] = $animations[$name];
+        }
 
         return $this;
     }
 
     /**
-     * Set the notification style.
+     * Set animation duration in seconds.
+     *
+     * @param float $seconds
+     * @return $this
+     */
+    public function animationDuration(float $seconds)
+    {
+        $this->options['animation_duration'] = $seconds;
+        return $this;
+    }
+
+    /**
+     * Add a special attention animation.
+     *
+     * @param string $animation
+     * @return $this
+     */
+    public function animate(string $animation)
+    {
+        $this->options['animation']['in'] = $animation;
+        return $this;
+    }
+
+    /**
+     * Use fade animation.
+     *
+     * @return $this
+     */
+    public function fade()
+    {
+        return $this->animationSet('fade');
+    }
+
+    /**
+     * Use slide left animation.
+     *
+     * @return $this
+     */
+    public function slideLeft()
+    {
+        return $this->animationSet('slide-left');
+    }
+
+    /**
+     * Use slide right animation.
+     *
+     * @return $this
+     */
+    public function slideRight()
+    {
+        return $this->animationSet('slide-right');
+    }
+
+    /**
+     * Use slide down animation.
+     *
+     * @return $this
+     */
+    public function slideDown()
+    {
+        return $this->animationSet('slide-down');
+    }
+
+    /**
+     * Use slide up animation.
+     *
+     * @return $this
+     */
+    public function slideUp()
+    {
+        return $this->animationSet('slide-up');
+    }
+
+    /**
+     * Use bounce animation.
+     *
+     * @return $this
+     */
+    public function bounce()
+    {
+        return $this->animationSet('bounce');
+    }
+
+    /**
+     * Use zoom animation.
+     *
+     * @return $this
+     */
+    public function zoom()
+    {
+        return $this->animationSet('zoom');
+    }
+
+    /**
+     * Use flip animation.
+     *
+     * @return $this
+     */
+    public function flip()
+    {
+        return $this->animationSet('flip');
+    }
+
+    /**
+     * Use swing animation.
+     *
+     * @return $this
+     */
+    public function swing()
+    {
+        return $this->animate('swing');
+    }
+
+    /**
+     * Use tada animation.
+     *
+     * @return $this
+     */
+    public function tada()
+    {
+        return $this->animate('tada');
+    }
+
+    /**
+     * Use pulse animation.
+     *
+     * @return $this
+     */
+    public function pulse()
+    {
+        return $this->animate('pulse');
+    }
+
+    /**
+     * Use rubber band animation.
+     *
+     * @return $this
+     */
+    public function rubberBand()
+    {
+        return $this->animate('rubber-band');
+    }
+
+    /**
+     * Set the toast notification style.
      *
      * @param array $style
-     * @return self
+     * @return $this
      */
-    public function style($style)
+    public function style(array $style)
     {
         $this->options['style'] = $style;
-
         return $this;
     }
 
     /**
-     * Set the notification class name.
+     * Set the toast notification class name.
      *
      * @param string $className
-     * @return self
+     * @return $this
      */
-    public function className($className)
+    public function className(string $className)
     {
-        $this->options['className'] = $className;
-
+        $this->options['class_name'] = $className;
         return $this;
     }
 
     /**
-     * Set the notification click callback.
+     * Set the toast notification click callback.
      *
-     * @param string $callback JavaScript callback function
-     * @return self
+     * @param string $callback
+     * @return $this
      */
-    public function onClick($callback)
+    public function onClick(string $callback)
     {
-        $this->options['onClick'] = $callback;
-
+        $this->options['on_click'] = $callback;
         return $this;
     }
 
     /**
-     * Set the notification offset.
+     * Set the toast notification offset.
      *
      * @param int|string $x
      * @param int|string $y
-     * @return self
+     * @return $this
      */
     public function offset($x, $y)
     {
         $this->options['offset'] = [
             'x' => $x,
-            'y' => $y
+            'y' => $y,
         ];
-
         return $this;
     }
 
     /**
-     * Flash the notification for the next request.
+     * Set the toast notification icon.
      *
-     * @return self
+     * @param string $iconHtml
+     * @return $this
+     */
+    public function icon(string $iconHtml)
+    {
+        $this->options['icon'] = $iconHtml;
+        return $this;
+    }
+
+    /**
+     * Set the toast notification icon position.
+     *
+     * @param string $position
+     * @return $this
+     */
+    public function iconPosition(string $position)
+    {
+        $this->options['icon_position'] = $position;
+        return $this;
+    }
+
+    /**
+     * Set the toast notification icon size.
+     *
+     * @param string $size
+     * @return $this
+     */
+    public function iconSize(string $size)
+    {
+        $this->options['icon_size'] = $size;
+        return $this;
+    }
+
+    /**
+     * Disable the toast notification icon.
+     *
+     * @return $this
+     */
+    public function noIcon()
+    {
+        $this->options['icon_enabled'] = false;
+        return $this;
+    }
+
+    /**
+     * Allow HTML in toast message.
+     *
+     * @param bool $allow
+     * @return $this
+     */
+    public function allowHtml(bool $allow = true)
+    {
+        $this->options['allow_html'] = $allow;
+        return $this;
+    }
+
+    /**
+     * Set toast title.
+     *
+     * @param string $title
+     * @return $this
+     */
+    public function title(string $title)
+    {
+        $this->options['title'] = $title;
+        return $this;
+    }
+
+    /**
+     * Set toast order (newest on top or bottom).
+     *
+     * @param bool $newest
+     * @return $this
+     */
+    public function newestOnTop(bool $newest = true)
+    {
+        $this->options['newest_on_top'] = $newest;
+        return $this;
+    }
+
+    /**
+     * Flash the toast notification for the next request.
+     *
+     * @return $this
      */
     public function flash()
     {
-        $notification = [
+        Session::flash(config('notyfyre.session_key', 'notyfyre'), [
             'message' => $this->message,
-            'options' => $this->options
-        ];
-
-        Session::flash(Config::get('notyfyre.session_key', 'notyfyre'), $notification);
+            'options' => $this->prepareOptions(),
+        ]);
 
         return $this;
     }
 
     /**
-     * Get the notification as an array.
+     * Convert the toast notification to an array.
      *
      * @return array
      */
@@ -397,12 +696,12 @@ class Notyfyre
     {
         return [
             'message' => $this->message,
-            'options' => $this->options
+            'options' => $this->prepareOptions(),
         ];
     }
 
     /**
-     * Get the notification as JSON.
+     * Convert the toast notification to JSON.
      *
      * @return string
      */
@@ -412,15 +711,59 @@ class Notyfyre
     }
 
     /**
-     * Get the JavaScript code to display the notification.
+     * Convert the toast notification to a JavaScript script.
      *
      * @return string
      */
     public function toScript()
     {
         $options = array_merge(['text' => $this->message], $this->options);
-        $optionsJson = json_encode($options);
 
-        return "Notyfyre({$optionsJson}).showToast();";
+        // Convert snake_case keys to camelCase for JavaScript
+        $jsOptions = [];
+        foreach ($options as $key => $value) {
+            $jsKey = lcfirst(str_replace('_', '', ucwords($key, '_')));
+            $jsOptions[$jsKey] = $value;
+        }
+
+        $optionsJson = json_encode($jsOptions);
+
+        return "Object.assign(document.createElement('div'), {
+            innerHTML: `{$escapedHtml}`,
+            className: `{$escapedClassName}`
+        })";
+    }
+
+    /**
+     * Generate JavaScript code for creating a custom HTML node with options.
+     *
+     * @param array $options
+     * @return string
+     */
+    protected function generateNodeOptionsScript($options)
+    {
+        $content = $options['content'] ?? '';
+        $className = $options['class'] ?? '';
+        $tag = $options['tag'] ?? 'div';
+
+        $escapedContent = addslashes($content);
+        $escapedClassName = addslashes($className);
+        $escapedTag = addslashes($tag);
+
+        return "Object.assign(document.createElement('{$escapedTag}'), {
+            innerHTML: `{$escapedContent}`,
+            className: `{$escapedClassName}`
+        })";
+    }
+
+    /**
+     * Convert a snake_case string to camelCase.
+     *
+     * @param string $input
+     * @return string
+     */
+    protected function snakeToCamel($input)
+    {
+        return lcfirst(str_replace('_', '', ucwords($input, '_')));
     }
 }
