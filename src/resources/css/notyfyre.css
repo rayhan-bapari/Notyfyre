@@ -1,17 +1,13 @@
+/* notyfyre.css */
 /*!
- * Notyfyre css 1.2.0
- * https://github.com/rayhan-bapari/Notyfyre
- * @license MIT licensed
+ * Notyfyre CSS 2.0.0
+ * ZephyrToast implementation for Laravel
  *
  * Copyright (C) 2025 Rayhan Bapari
- * Toast functionality inspired by ZephyrToast
+ * MIT Licensed
  */
 
-/* Import animations */
-@import url('notyfyre-animations.css');
-
-/* Base Toast Container and Positioning */
-.notyfyre-container {
+ .notyfyre-container {
     position: fixed;
     z-index: 9999;
     padding: 15px;
@@ -19,42 +15,41 @@
     min-width: fit-content;
 }
 
-.notyfyre-position-right-top {
+.notyfyre-position-top-right {
     top: 0px;
     right: 0px;
 }
 
-.notyfyre-position-left-top {
+.notyfyre-position-top-left {
     top: 0px;
     left: 0px;
 }
 
-.notyfyre-position-right-bottom {
+.notyfyre-position-bottom-right {
     bottom: 0px;
     right: 0px;
 }
 
-.notyfyre-position-left-bottom {
+.notyfyre-position-bottom-left {
     bottom: 0px;
     left: 0px;
 }
 
-.notyfyre-position-center-top {
+.notyfyre-position-top-center {
     top: 0px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.notyfyre-position-center-bottom {
+.notyfyre-position-bottom-center {
     bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* Toast Notification */
-.notyfyre {
+.notyfyre-notification {
     margin-bottom: 15px;
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     display: flex;
@@ -64,55 +59,35 @@
     border-width: 1px;
     border-style: solid;
     pointer-events: auto;
-    color: #ffffff;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
 }
 
-.notyfyre-body {
+.notyfyre-notification-body {
     padding: 0.75rem;
     display: flex;
 }
 
-.notyfyre-icon {
+.notyfyre-notification-icon {
     margin-right: 12px;
     display: flex;
     align-items: center;
-    min-width: 24px;
 }
 
-.notyfyre-icon svg {
-    width: 100%;
-    height: 100%;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-}
-
-.notyfyre-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.notyfyre-message {
-    font-size: 0.95rem;
-    line-height: 1.4;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+.notyfyre-notification-content {
     flex: 1;
 }
 
-.notyfyre-title {
+.notyfyre-notification-title {
     font-weight: bold;
     margin-bottom: 0.25rem;
 }
 
-.notyfyre-close {
+.notyfyre-notification-close {
     background: transparent;
     border: 0;
-    color: white;
-    cursor: pointer;
     padding: 0 0.5rem;
+    cursor: pointer;
     align-self: flex-start;
     margin-left: 0.5rem;
     font-size: 1.25rem;
@@ -120,73 +95,85 @@
     opacity: 0.7;
 }
 
-.notyfyre-close:hover {
+.notyfyre-notification-close:hover {
     opacity: 1;
 }
 
-/* Progress bar */
-.notyfyre-progress {
+.notyfyre-progress-bar {
     height: 5px;
     background-color: rgba(0, 0, 0, 0.15);
     position: relative;
 }
 
-.notyfyre-progress-fill {
+.notyfyre-progress-bar-fill {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.075);
     transition: width linear;
     width: 100%;
 }
 
-.notyfyre-void-progress {
+.notyfyre-progress-bar-void {
     height: 5px;
     background-color: rgba(75, 84, 88, 1);
     position: relative;
 }
 
-.notyfyre-void-progress-fill {
+.notyfyre-progress-bar-void-fill {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.15);
     transition: width linear;
     width: 100%;
 }
 
-/* Toast Types with updated gradients */
+/* Pre-defined toast types */
 .notyfyre-success {
-    background: linear-gradient(135deg, #42e695, #3bb2b8);
+    background-color: #e3f7ed;
+    color: #3bad71;
     border-color: #b5eace;
 }
 
 .notyfyre-error {
-    background: linear-gradient(135deg, #ff5e7a, #ff3c6f);
+    background-color: #fde8e4;
+    color: #cc563d;
     border-color: #f9c1b6;
 }
 
 .notyfyre-warning {
-    background: linear-gradient(135deg, #ffca3a, #ff9a3a);
+    background-color: #fff5da;
+    color: #d9a209;
     border-color: #ffe59d;
 }
 
 .notyfyre-info {
-    background: linear-gradient(135deg, #73a5ff, #5477f5);
+    background-color: #dff0fa;
+    color: #2385ba;
     border-color: #a9d7f1;
 }
 
 .notyfyre-zen {
-    background: linear-gradient(135deg, #f4f7f9, #e6eaef);
+    background-color: #f4f7f9;
     color: #2e3a59;
     border-color: #d8e1e8;
 }
 
 .notyfyre-void {
-    background: #111113;
+    background-color: #111113;
     color: #f1f1f1;
     border-color: #111113;
 }
 
-/* Mobile responsiveness improvements */
-@media only screen and (max-width: 576px) {
-    .notyfyre-container {
+/*
+ * Responsive adjustments for mobile view (max-width: 576px)
+ * Applies full-width and centered alignment to all toast positions
+ * for better readability and appearance on small screens.
+ */
+@media (max-width: 576px) {
+    .notyfyre-position-top-right,
+    .notyfyre-position-top-left,
+    .notyfyre-position-bottom-right,
+    .notyfyre-position-bottom-left,
+    .notyfyre-position-top-center,
+    .notyfyre-position-bottom-center {
         left: 50% !important;
         transform: translateX(-50%) !important;
         width: 100% !important;
@@ -194,9 +181,251 @@
         padding: 0 10px !important;
     }
 
-    .notyfyre {
+    .notyfyre-notification {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box;
     }
+}
+
+/* Animation classes */
+.notyfyre_animate {
+    animation-duration: 0.75s;
+    animation-fill-mode: both;
+}
+
+/* Fade Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.notyfyre_animate_fadeIn {
+    animation-name: fadeIn;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.notyfyre_animate_fadeOut {
+    animation-name: fadeOut;
+}
+
+/* Slide Left Animations */
+@keyframes slideInLeft {
+    from {
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideInLeft {
+    animation-name: slideInLeft;
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideOutLeft {
+    animation-name: slideOutLeft;
+}
+
+/* Slide Right Animations */
+@keyframes slideInRight {
+    from {
+        transform: translate3d(100%, 0, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideInRight {
+    animation-name: slideInRight;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(100%, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideOutRight {
+    animation-name: slideOutRight;
+}
+
+/* Slide Down/Up Animations */
+@keyframes slideInDown {
+    from {
+        transform: translate3d(0, -100%, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideInDown {
+    animation-name: slideInDown;
+}
+
+@keyframes slideOutUp {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(0, -100%, 0);
+    }
+}
+
+.notyfyre_animate_slideOutUp {
+    animation-name: slideOutUp;
+}
+
+/* Slide Up/Down Animations */
+@keyframes slideInUp {
+    from {
+        transform: translate3d(0, 100%, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.notyfyre_animate_slideInUp {
+    animation-name: slideInUp;
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        visibility: hidden;
+        transform: translate3d(0, 100%, 0);
+    }
+}
+
+.notyfyre_animate_slideOutDown {
+    animation-name: slideOutDown;
+}
+
+/* Bounce Animations */
+@keyframes bounceIn {
+    from,
+    20%,
+    40%,
+    60%,
+    80%,
+    to {
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    0% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    20% {
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    40% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    60% {
+        opacity: 1;
+        transform: scale3d(1.03, 1.03, 1.03);
+    }
+    80% {
+        transform: scale3d(0.97, 0.97, 0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre_animate_bounceIn {
+    animation-name: bounceIn;
+    animation-duration: 0.75s;
+}
+
+@keyframes bounceOut {
+    20% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    50%,
+    55% {
+        opacity: 1;
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    to {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+}
+
+.notyfyre_animate_bounceOut {
+    animation-name: bounceOut;
+    animation-duration: 0.75s;
+}
+
+/* Zoom Animations */
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    50% {
+        opacity: 1;
+    }
+    to {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.notyfyre_animate_zoomIn {
+    animation-name: zoomIn;
+}
+
+@keyframes zoomOut {
+    from {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.notyfyre_animate_zoomOut {
+    animation-name: zoomOut;
 }

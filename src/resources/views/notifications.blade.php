@@ -6,15 +6,37 @@
 @if (isset($notyfyreNotifications))
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize ZephyrToast
+            const toast = new Notyfyre();
+
             var notification = {!! json_encode($notyfyreNotifications) !!};
-
-            // Set the message
+            var message = notification.message || '';
             var options = notification.options || {};
-            options.text = notification.message || '';
+            var type = options.type || 'info';
 
-            // Direct pass-through of options to JS
-            // This maintains camelCase in PHP which matches JS expectations
-            Notyfyre(options).showToast();
+            // Call the appropriate method based on notification type
+            switch (type) {
+                case 'success':
+                    toast.success(message, options);
+                    break;
+                case 'error':
+                    toast.error(message, options);
+                    break;
+                case 'warning':
+                    toast.warning(message, options);
+                    break;
+                case 'info':
+                    toast.info(message, options);
+                    break;
+                case 'zen':
+                    toast.zen(message, options);
+                    break;
+                case 'void':
+                    toast.void(message, options);
+                    break;
+                default:
+                    toast.show(message, options);
+            }
         });
     </script>
 @endif

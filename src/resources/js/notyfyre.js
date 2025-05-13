@@ -1,514 +1,472 @@
-/*!
- * Notyfyre js 1.2.0
- * https://github.com/rayhan-bapari/Notyfyre
- * @license MIT licensed
+/**
+ * Notyfyre JS 2.0.0
+ * ZephyrToast implementation for Laravel
  *
  * Copyright (C) 2025 Rayhan Bapari
- * Based on Toastify JS
+ * MIT Licensed
  */
-(function (root, factory) {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory();
-	} else {
-		root.Notyfyre = factory();
+
+class Notyfyre {
+	constructor(options = {}) {
+		// Default configuration
+		this.defaults = {
+			position: 'top-right',
+			newestOnTop: true,
+			type: 'info',
+			duration: 5000,
+			pauseOnHover: true,
+			showProgress: true,
+			animation: {
+				in: 'fadeIn',
+				out: 'fadeOut',
+			},
+			message: '',
+			title: '',
+			allowHtml: false,
+			enableIcon: true,
+			icon: null,
+			isIcon: false,
+			showClose: true,
+			onClose: null,
+			onClick: null,
+		};
+
+		// Merge options with defaults
+		this.options = { ...this.defaults, ...options };
+
+		// Initialize the container
+		this.initializeContainer();
+
+		// Animation classes
+		this.animations = {
+			fadeIn: 'notyfyre_animate_fadeIn',
+			fadeOut: 'notyfyre_animate_fadeOut',
+			slideInLeft: 'notyfyre_animate_slideInLeft',
+			slideOutLeft: 'notyfyre_animate_slideOutLeft',
+			slideInRight: 'notyfyre_animate_slideInRight',
+			slideOutRight: 'notyfyre_animate_slideOutRight',
+			slideInDown: 'notyfyre_animate_slideInDown',
+			slideOutUp: 'notyfyre_animate_slideOutUp',
+			slideInUp: 'notyfyre_animate_slideInUp',
+			slideOutDown: 'notyfyre_animate_slideOutDown',
+			bounceIn: 'notyfyre_animate_bounceIn',
+			bounceOut: 'notyfyre_animate_bounceOut',
+			zoomIn: 'notyfyre_animate_zoomIn',
+			zoomOut: 'notyfyre_animate_zoomOut',
+		};
+
+		// Toast class types
+		this.types = {
+			success: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>',
+				bgColor: '#e3f7ed',
+				textColor: '#3bad71',
+				borderColor: '#b5eace',
+			},
+			info: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>',
+				bgColor: '#dff0fa',
+				textColor: '#2385ba',
+				borderColor: '#a9d7f1',
+			},
+			warning: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
+				bgColor: '#fff5da',
+				textColor: '#d9a209',
+				borderColor: '#ffe59d',
+			},
+			error: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>',
+				bgColor: '#fde8e4',
+				textColor: '#cc563d',
+				borderColor: '#f9c1b6',
+			},
+			zen: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/></svg>',
+				bgColor: '#f4f7f9',
+				textColor: '#2e3a59',
+				borderColor: '#d8e1e8',
+			},
+			void: {
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/></svg>',
+				bgColor: '#111113',
+				textColor: '#f1f1f1',
+				borderColor: '#111113',
+			},
+		};
 	}
-})(this, function (global) {
-	// Object initialization
-	var Notyfyre = function (options) {
-			// Returning a new init object
-			return new Notyfyre.lib.init(options);
-		},
-		// Library version
-		version = '1.1.0';
 
-	// Set the default global options
-	Notyfyre.defaults = {
-		oldestFirst: true,
-		text: 'Notyfyre notification!',
-		node: undefined,
-		duration: 3000,
-		selector: undefined,
-		callback: function () {},
-		destination: undefined,
-		newWindow: false,
-		close: false,
-		gravity: 'top', // top or bottom
-		position: 'right', // left, right, or center
-		backgroundColor: '',
-		avatar: '',
-		className: '',
-		stopOnFocus: true,
-		onClick: function () {},
-		offset: { x: 0, y: 0 },
-		escapeMarkup: true,
-		ariaLive: 'polite',
-		style: { background: '' },
-		progressBar: true,
-		progressBarColor: '',
-		animation: {
-			in: 'fadeIn',
-			out: 'fadeOut',
-		},
-		// New icon options
-		iconEnabled: false,
-		icon: null,
-		iconPosition: 'left', // left or right
-		iconSize: '24px',
-	};
+	/**
+	 * Initialize the container for toast notifications
+	 */
+	initializeContainer() {
+		// Get or create the container
+		this.container = document.getElementById('notyfyre-container');
+		if (!this.container) {
+			this.container = document.createElement('div');
+			this.container.id = 'notyfyre-container';
+			document.body.appendChild(this.container);
+		}
 
-	// Defining the prototype of the object
-	Notyfyre.lib = Notyfyre.prototype = {
-		notyfyre: version,
+		// Set position class
+		this.container.className = `notyfyre-container notyfyre-position-${this.options.position}`;
+	}
 
-		constructor: Notyfyre,
+	/**
+	 * Create a new toast notification
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	createToast(message, options = {}) {
+		// Merge options with defaults, including theme properties
+		const toastOptions = {
+			...this.options,
+			...options,
+			message,
+			theme: {
+				// Merge theme options (allow user override)
+				bgColor: options.theme?.bgColor || this.types[options.type]?.bgColor,
+				textColor: options.theme?.textColor || this.types[options.type]?.textColor,
+				borderColor: options.theme?.borderColor || this.types[options.type]?.borderColor,
+				progressTrackColor: options.theme?.progressTrackColor,
+				progressBarColor: options.theme?.progressBarColor,
+			},
+		};
 
-		// Initializing the object with required parameters
-		init: function (options) {
-			// Verifying and validating the input object
-			if (!options) {
-				options = {};
-			}
+		// Update position if provided in options
+		if (options.position && options.position !== this.options.position) {
+			this.updatePosition(options.position);
+		}
 
-			// Creating the options object
-			this.options = {};
+		// Create toast element
+		const toast = document.createElement('div');
+		toast.className = `notyfyre-notification notyfyre_animate ${this.animations[toastOptions.animation.in]}`;
+		toast.style.backgroundColor = toastOptions.theme.bgColor;
+		toast.style.color = toastOptions.theme.textColor;
+		toast.style.borderColor = toastOptions.theme.borderColor;
 
-			this.toastElement = null;
+		// Add class if provided
+		if (toastOptions.className) {
+			toast.classList.add(toastOptions.className);
+		}
 
-			// Validating the options
-			this.options.text = options.text || Notyfyre.defaults.text; // Display message
-			this.options.node = options.node || Notyfyre.defaults.node; // Display content as node
-			this.options.duration = options.duration === 0 ? 0 : options.duration || Notyfyre.defaults.duration; // Display duration
-			this.options.selector = options.selector || Notyfyre.defaults.selector; // Parent selector
-			this.options.callback = options.callback || Notyfyre.defaults.callback; // Callback after display
-			this.options.destination = options.destination || Notyfyre.defaults.destination; // On-click destination
-			this.options.newWindow = options.newWindow || Notyfyre.defaults.newWindow; // Open destination in new window
-			this.options.close = options.close || Notyfyre.defaults.close; // Show toast close icon
-			this.options.gravity = options.gravity || Notyfyre.defaults.gravity; // toast position - top or bottom
-			this.options.position = options.position || Notyfyre.defaults.position; // toast position - left, right, center
-			this.options.backgroundColor = options.backgroundColor || Notyfyre.defaults.backgroundColor; // toast background color
-			this.options.avatar = options.avatar || Notyfyre.defaults.avatar; // img element src - url or a path
-			this.options.className = options.className || Notyfyre.defaults.className; // additional class names for the toast
-			this.options.stopOnFocus =
-				options.stopOnFocus === undefined ? Notyfyre.defaults.stopOnFocus : options.stopOnFocus; // stop timeout on focus
-			this.options.onClick = options.onClick || Notyfyre.defaults.onClick; // Callback after click
-			this.options.offset = options.offset || Notyfyre.defaults.offset; // toast offset
-			this.options.escapeMarkup =
-				options.escapeMarkup !== undefined ? options.escapeMarkup : Notyfyre.defaults.escapeMarkup;
-			this.options.ariaLive = options.ariaLive || Notyfyre.defaults.ariaLive;
-			this.options.style = options.style || Notyfyre.defaults.style;
+		// Create toast body
+		const toastBody = document.createElement('div');
+		toastBody.className = 'notyfyre-notification-body';
 
-			// New options
-			this.options.progressBar =
-				options.progressBar !== undefined ? options.progressBar : Notyfyre.defaults.progressBar;
-			this.options.progressBarColor = options.progressBarColor || Notyfyre.defaults.progressBarColor;
-			this.options.animation = options.animation || Notyfyre.defaults.animation;
+		//Adds an icon to the toast notification if `enableIcon` is not explicitly set to false.
+		if (toastOptions.enableIcon !== false) {
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'notyfyre-notification-icon';
 
-			// Icon options
-			this.options.iconEnabled =
-				options.iconEnabled !== undefined ? options.iconEnabled : Notyfyre.defaults.iconEnabled;
-			this.options.icon = options.icon || Notyfyre.defaults.icon;
-			this.options.iconPosition = options.iconPosition || Notyfyre.defaults.iconPosition;
-			this.options.iconSize = options.iconSize || Notyfyre.defaults.iconSize;
-
-			if (options.backgroundColor) {
-				this.options.style.background = options.backgroundColor;
-			}
-
-			// Returning the current object for chaining functions
-			return this;
-		},
-
-		// Building the DOM element
-		buildToast: function () {
-			// Validating if the options are defined
-			if (!this.options) {
-				throw 'Notyfyre is not initialized';
-			}
-
-			// Creating the DOM object
-			var divElement = document.createElement('div');
-			divElement.className = 'notyfyre';
-
-			// Add animation class
-			divElement.className += ' ' + this.options.animation.in;
-
-			if (this.options.className) {
-				divElement.className += ' ' + this.options.className;
-			}
-
-			// Positioning toast to left or right or center
-			divElement.className += ' notyfyre-' + this.options.position;
-
-			// Assigning gravity of element
-			divElement.className += ' notyfyre-' + this.options.gravity;
-
-			if (this.options.backgroundColor) {
-				console.warn(
-					'DEPRECATION NOTICE: "backgroundColor" is being deprecated. Please use the "style.background" property.',
-				);
-			}
-
-			// Loop through our style object and apply styles to divElement
-			for (var property in this.options.style) {
-				divElement.style[property] = this.options.style[property];
-			}
-
-            // Announce the toast to screen readers
-            if (this.options.ariaLive) {
-                divElement.setAttribute('aria-live', this.options.ariaLive);
-            }
-
-			// Create a wrapper for message content (for better styling with icons)
-			var contentWrapper = document.createElement('div');
-			contentWrapper.className = 'notyfyre-content';
-
-			// Add icon if enabled
-			if (this.options.iconEnabled && this.options.icon) {
-				var iconWrapper = document.createElement('div');
-				iconWrapper.className = 'notyfyre-icon';
-				iconWrapper.style.width = this.options.iconSize;
-				iconWrapper.style.height = this.options.iconSize;
-				iconWrapper.innerHTML = this.options.icon;
-
-				// Always add icon at the beginning of the content wrapper
-				contentWrapper.appendChild(iconWrapper);
-			}
-
-			// Create message element
-			var messageElement = document.createElement('div');
-			messageElement.className = 'notyfyre-message';
-
-			// Adding the toast message/node
-			if (this.options.node && this.options.node.nodeType === Node.ELEMENT_NODE) {
-				// If we have a valid node, we insert it
-				messageElement.appendChild(this.options.node);
-			} else {
-				if (this.options.escapeMarkup) {
-					messageElement.innerText = this.options.text;
-				} else {
-					messageElement.innerHTML = this.options.text;
-				}
-			}
-
-			// Add message after icon
-			contentWrapper.appendChild(messageElement);
-
-			// Add the content wrapper to the main element
-			divElement.appendChild(contentWrapper);
-
-			if (this.options.avatar !== '') {
-				var avatarElement = document.createElement('img');
-				avatarElement.src = this.options.avatar;
-				avatarElement.className = 'notyfyre-avatar';
-				contentWrapper.insertBefore(avatarElement, contentWrapper.firstChild);
-			}
-
-			// Adding a close icon to the toast
-			if (this.options.close === true) {
-				// Create a button for close element
-				var closeElement = document.createElement('button');
-				closeElement.type = 'button';
-				closeElement.setAttribute('aria-label', 'Close');
-				closeElement.className = 'notyfyre-close';
-				closeElement.innerHTML = '&#10006;';
-
-				// Triggering the removal of toast from DOM on close click
-				closeElement.addEventListener(
-					'click',
-					function (event) {
-						event.stopPropagation();
-						this.removeElement(this.toastElement);
-						window.clearTimeout(this.toastElement.timeOutValue);
-					}.bind(this),
-				);
-
-				// Always add close icon to the toast (outside the content wrapper)
-				divElement.appendChild(closeElement);
-			}
-
-			// Add progress bar
-			if (this.options.progressBar && this.options.duration > 0) {
-				var progressElement = document.createElement('div');
-				progressElement.className = 'notyfyre-progress';
-
-				if (this.options.progressBarColor) {
-					progressElement.style.background = this.options.progressBarColor;
-				}
-
-				divElement.appendChild(progressElement);
-			}
-
-			// Adding offset
-			if (typeof this.options.offset === 'object') {
-				var x = getAxisOffsetAValue('x', this.options);
-				var y = getAxisOffsetAValue('y', this.options);
-
-				var xOffset = this.options.position === 'left' ? x : '-' + x;
-				var yOffset = this.options.gravity === 'top' ? y : '-' + y;
-
-				divElement.style.transform = 'translate(' + xOffset + ',' + yOffset + ')';
-			}
-
-			// Returning the generated element
-			return divElement;
-		},
-
-		// Displaying the toast
-		showToast: function () {
-			// Creating the DOM object for the toast
-			this.toastElement = this.buildToast();
-
-			// Getting the root element to with the toast needs to be added
-			var rootElement;
-			if (typeof this.options.selector === 'string') {
-				rootElement = document.getElementById(this.options.selector);
-			} else if (
-				this.options.selector instanceof HTMLElement ||
-				(typeof ShadowRoot !== 'undefined' && this.options.selector instanceof ShadowRoot)
-			) {
-				rootElement = this.options.selector;
-			} else {
-				rootElement = document.body;
-			}
-
-			// Validating if root element is present in DOM
-			if (!rootElement) {
-				throw 'Root element is not defined';
-			}
-
-			// Adding the DOM element
-			var elementToInsert = Notyfyre.defaults.oldestFirst ? rootElement.firstChild : rootElement.lastChild;
-			rootElement.insertBefore(this.toastElement, elementToInsert);
-
-			// Repositioning the toasts in case multiple toasts are present
-			Notyfyre.reposition();
-
-			// Animate the progress bar
-			if (this.options.progressBar && this.options.duration > 0) {
-				var progressElement = this.toastElement.querySelector('.notyfyre-progress');
-				if (progressElement) {
-					setTimeout(
-						function () {
-							progressElement.style.transition = 'width ' + this.options.duration + 'ms linear';
-							progressElement.style.width = '0%';
-						}.bind(this),
-						10,
-					);
-				}
-			}
-
-			// Clear timeout while toast is focused
-			if (this.options.stopOnFocus && this.options.duration > 0) {
-				var self = this;
-				// stop countdown
-				this.toastElement.addEventListener('mouseover', function (event) {
-					window.clearTimeout(self.toastElement.timeOutValue);
-
-					// Pause progress bar animation
-					if (self.options.progressBar) {
-						var progressElement = self.toastElement.querySelector('.notyfyre-progress');
-						if (progressElement) {
-							var computedStyle = window.getComputedStyle(progressElement);
-							var width = computedStyle.getPropertyValue('width');
-							progressElement.style.transition = 'none';
-							progressElement.style.width = width;
+			// Check if a custom icon is provided
+			if (toastOptions.icon) {
+				if (typeof toastOptions.icon === 'string') {
+					if (toastOptions.isIcon) {
+						if (toastOptions.icon.match(/\.(jpeg|jpg|gif|png)$/i)) {
+							throw new Error('isIcon is true, but an image URL was provided for the icon.');
 						}
-					}
-				});
-
-				// add back the timeout
-				this.toastElement.addEventListener('mouseleave', function () {
-					// Get remaining time
-					var remainingTime = self.options.duration;
-
-					if (self.options.progressBar) {
-						var progressElement = self.toastElement.querySelector('.notyfyre-progress');
-						if (progressElement) {
-							var computedStyle = window.getComputedStyle(progressElement);
-							var width = parseFloat(computedStyle.getPropertyValue('width'));
-							var totalWidth =
-								parseFloat(computedStyle.getPropertyValue('width')) +
-								parseFloat(computedStyle.getPropertyValue('padding-left')) +
-								parseFloat(computedStyle.getPropertyValue('padding-right'));
-
-							var percentage = width / totalWidth;
-							remainingTime = self.options.duration * percentage;
-
-							progressElement.style.transition = 'width ' + remainingTime + 'ms linear';
-							progressElement.style.width = '0%';
-						}
-					}
-
-					self.toastElement.timeOutValue = window.setTimeout(function () {
-						// Remove the toast from DOM
-						self.removeElement(self.toastElement);
-					}, remainingTime);
-				});
-			}
-
-			if (this.options.duration > 0) {
-				this.toastElement.timeOutValue = window.setTimeout(
-					function () {
-						// Remove the toast from DOM
-						this.removeElement(this.toastElement);
-					}.bind(this),
-					this.options.duration,
-				); // Binding `this` for function invocation
-			}
-
-			// Adding an on-click destination path
-			if (typeof this.options.destination !== 'undefined') {
-				this.toastElement.addEventListener(
-					'click',
-					function (event) {
-						event.stopPropagation();
-						if (this.options.newWindow === true) {
-							window.open(this.options.destination, '_blank');
+						iconDiv.innerHTML = `<i class="${toastOptions.icon}"></i>`;
+					} else {
+						if (toastOptions.icon.match(/\.(jpeg|jpg|gif|png)$/i)) {
+							iconDiv.innerHTML = `<img src="${toastOptions.icon}" alt="icon" style="width: 16px; height: 16px;" />`;
 						} else {
-							window.location = this.options.destination;
+							iconDiv.innerHTML = toastOptions.icon;
 						}
-					}.bind(this),
-				);
-			}
-
-			if (typeof this.options.onClick === 'function' && typeof this.options.destination === 'undefined') {
-				this.toastElement.addEventListener(
-					'click',
-					function (event) {
-						event.stopPropagation();
-						this.options.onClick();
-					}.bind(this),
-				);
-			}
-
-			// Supporting function chaining
-			return this;
-		},
-
-		hideToast: function () {
-			if (this.toastElement && this.toastElement.timeOutValue) {
-				clearTimeout(this.toastElement.timeOutValue);
-			}
-			if (this.toastElement) {
-				this.removeElement(this.toastElement);
-			}
-			return this;
-		},
-
-		// Removing the element from the DOM
-		removeElement: function (toastElement) {
-			// Hiding the element with animation
-			toastElement.className = toastElement.className.replace(
-				this.options.animation.in,
-				this.options.animation.out,
-			);
-
-			// Removing the element from DOM after transition end
-			window.setTimeout(
-				function () {
-					// remove options node if any
-					if (this.options.node && this.options.node.parentNode) {
-						this.options.node.parentNode.removeChild(this.options.node);
 					}
-
-					// Remove the element from the DOM, only when the parent node was not removed before.
-					if (toastElement.parentNode) {
-						toastElement.parentNode.removeChild(toastElement);
+				}
+				// If it's an object with specific properties
+				else if (typeof toastOptions.icon === 'object') {
+					if (toastOptions.icon.url) {
+						// Image URL
+						iconDiv.innerHTML = `<img src="${toastOptions.icon.url}" alt="icon" style="width: ${
+							toastOptions.icon.width || '16px'
+						}; height: ${toastOptions.icon.height || '16px'};" />`;
+					} else if (toastOptions.icon.fontAwesome) {
+						// FontAwesome with specific class
+						iconDiv.innerHTML = `<i class="${toastOptions.icon.fontAwesome}"></i>`;
+					} else if (toastOptions.icon.svg) {
+						// SVG content
+						iconDiv.innerHTML = toastOptions.icon.svg;
 					}
-
-					// Calling the callback function
-					this.options.callback.call(toastElement);
-
-					// Repositioning the toasts again
-					Notyfyre.reposition();
-				}.bind(this),
-				400,
-			); // Binding `this` for function invocation
-		},
-	};
-
-	// Positioning the toasts on the DOM
-	Notyfyre.reposition = function () {
-		// Top margins with gravity
-		var topLeftOffsetSize = {
-			top: 15,
-			bottom: 15,
-		};
-		var topRightOffsetSize = {
-			top: 15,
-			bottom: 15,
-		};
-		var topCenterOffsetSize = {
-			top: 15,
-			bottom: 15,
-		};
-
-		// Get all toast messages on the DOM
-		var allToasts = document.getElementsByClassName('notyfyre');
-
-		var classUsed;
-
-		// Modifying the position of each toast element
-		for (var i = 0; i < allToasts.length; i++) {
-			// Getting the applied gravity
-			if (containsClass(allToasts[i], 'notyfyre-top')) {
-				classUsed = 'top';
+				}
 			} else {
-				classUsed = 'bottom';
+				// Use default icon based on type
+				iconDiv.innerHTML = this.types[toastOptions.type].icon;
 			}
-
-			var height = allToasts[i].offsetHeight;
-			// Spacing between toasts
-			var offset = 15;
-
-			// Show toast in position
-			if (containsClass(allToasts[i], 'notyfyre-left')) {
-				// Setting the position for left
-				allToasts[i].style[classUsed] = topLeftOffsetSize[classUsed] + 'px';
-				topLeftOffsetSize[classUsed] += height + offset;
-			} else if (containsClass(allToasts[i], 'notyfyre-center')) {
-				// Setting the position for center (need to center horizontally as well)
-				allToasts[i].style[classUsed] = topCenterOffsetSize[classUsed] + 'px';
-				allToasts[i].style.left = '50%';
-				allToasts[i].style.transform = 'translateX(-50%)';
-				topCenterOffsetSize[classUsed] += height + offset;
-			} else {
-				// Default is right position
-				allToasts[i].style[classUsed] = topRightOffsetSize[classUsed] + 'px';
-				topRightOffsetSize[classUsed] += height + offset;
-			}
+			toastBody.appendChild(iconDiv);
 		}
 
-		// Supporting function chaining
-		return this;
-	};
+		// Add content
+		const contentDiv = document.createElement('div');
+		contentDiv.className = 'notyfyre-notification-content';
 
-	// Helper function to get offset.
-	function getAxisOffsetAValue(axis, options) {
-		if (options.offset[axis]) {
-			if (isNaN(options.offset[axis])) {
-				return options.offset[axis];
-			} else {
-				return options.offset[axis] + 'px';
-			}
+		// Add title if provided
+		if (toastOptions.title) {
+			const titleDiv = document.createElement('div');
+			titleDiv.className = 'notyfyre-notification-title';
+			titleDiv.textContent = toastOptions.title;
+			contentDiv.appendChild(titleDiv);
 		}
 
-		return '0px';
-	}
-
-	function containsClass(elem, yourClass) {
-		if (!elem || typeof yourClass !== 'string') {
-			return false;
-		} else if (elem.className && elem.className.trim().split(/\s+/gi).indexOf(yourClass) > -1) {
-			return true;
+		// Add message (supports HTML if allowHtml is true)
+		const messageDiv = document.createElement('div');
+		messageDiv.className = 'notyfyre-notification-message';
+		if (toastOptions.allowHtml) {
+			messageDiv.innerHTML = toastOptions.message;
 		} else {
-			return false;
+			messageDiv.textContent = toastOptions.message;
 		}
+		contentDiv.appendChild(messageDiv);
+
+		toastBody.appendChild(contentDiv);
+		toast.appendChild(toastBody);
+
+		// Add close button if enabled
+		if (toastOptions.showClose) {
+			const closeButton = document.createElement('button');
+			closeButton.type = 'button';
+			closeButton.className = 'notyfyre-notification-close';
+			closeButton.innerHTML = '&times;';
+			closeButton.style.color = toastOptions.theme.textColor;
+			closeButton.addEventListener('click', () => this.removeToast(toast));
+			toastBody.appendChild(closeButton);
+		}
+
+		// Add progress bar if enabled
+		if (toastOptions.showProgress && toastOptions.duration > 0) {
+			const progressBar = document.createElement('div');
+			progressBar.className =
+				toastOptions.type === 'void' ? 'notyfyre-progress-bar-void' : 'notyfyre-progress-bar';
+
+			// Apply user/default background (track)
+			if (toastOptions.theme.progressTrackColor) {
+				progressBar.style.backgroundColor = toastOptions.theme.progressTrackColor;
+			}
+
+			const progressBarFill = document.createElement('div');
+			progressBarFill.className =
+				toastOptions.type === 'void' ? 'notyfyre-progress-bar-void-fill' : 'notyfyre-progress-bar-fill';
+
+			// Apply user/default fill color
+			if (toastOptions.theme.progressBarColor) {
+				progressBarFill.style.backgroundColor = toastOptions.theme.progressBarColor;
+			}
+
+			progressBar.appendChild(progressBarFill);
+			toast.appendChild(progressBar);
+
+			setTimeout(() => {
+				progressBarFill.style.width = '0%';
+				progressBarFill.style.transitionDuration = `${toastOptions.duration}ms`;
+			}, 10);
+		}
+
+		// Add click handler if provided
+		if (typeof toastOptions.onClick === 'function') {
+			toast.style.cursor = 'pointer';
+			toast.addEventListener('click', e => {
+				if (
+					e.target !== toast &&
+					e.target.className !== 'notyfyre-notification-message' &&
+					e.target.className !== 'notyfyre-notification-content'
+				)
+					return;
+				toastOptions.onClick();
+			});
+		}
+
+		// Store options with the toast
+		toast._options = toastOptions;
+
+		// Add to container
+		if (toastOptions.newestOnTop) {
+			this.container.prepend(toast);
+		} else {
+			this.container.appendChild(toast);
+		}
+
+		// Make toast visible
+		setTimeout(() => {
+			toast.style.opacity = '1';
+		}, 10);
+
+		// Auto-remove after duration
+		if (toastOptions.duration > 0) {
+			toast._timeoutId = setTimeout(() => {
+				this.removeToast(toast);
+			}, toastOptions.duration);
+		}
+
+		// Add pause-on-hover functionality
+		if (toastOptions.pauseOnHover && toastOptions.duration > 0) {
+			let remainingTime = toastOptions.duration;
+
+			// Pause progress and timer when user hovers over the toast
+			toast.addEventListener('mouseenter', () => {
+				// Clear the timeout to prevent auto-removal
+				if (toast._timeoutId) {
+					clearTimeout(toast._timeoutId);
+					toast._timeoutId = null;
+				}
+
+				// Stop the progress bar animation
+				if (toastOptions.showProgress) {
+					const progressBarFill = toast.querySelector(
+						'.notyfyre-progress-bar-fill, .notyfyre-progress-bar-void-fill',
+					);
+					if (progressBarFill) {
+						// Calculate remaining time based on current width
+						const currentWidth = parseFloat(getComputedStyle(progressBarFill).width);
+						const fullWidth = parseFloat(getComputedStyle(progressBarFill.parentElement).width);
+						remainingTime = toastOptions.duration * (currentWidth / fullWidth);
+
+						// Pause animation by removing transition and keeping current width
+						progressBarFill.style.transition = 'none';
+						progressBarFill.style.width = `${(currentWidth / fullWidth) * 100}%`;
+					}
+				}
+			});
+
+			// Resume progress and timer when user's mouse leaves the toast
+			toast.addEventListener('mouseleave', () => {
+				// Restart the timeout with remaining time
+				if (!toast._timeoutId && remainingTime > 0) {
+					toast._timeoutId = setTimeout(() => {
+						this.removeToast(toast);
+					}, remainingTime);
+
+					// Restart the progress bar animation
+					if (toastOptions.showProgress) {
+						const progressBarFill = toast.querySelector(
+							'.notyfyre-progress-bar-fill, .notyfyre-progress-bar-void-fill',
+						);
+						if (progressBarFill) {
+							// Resume animation
+							setTimeout(() => {
+								progressBarFill.style.transition = `width ${remainingTime}ms linear`;
+								progressBarFill.style.width = '0%';
+							}, 10);
+						}
+					}
+				}
+			});
+		}
+
+		return toast;
 	}
 
-	// Setting up the prototype for the init object
-	Notyfyre.lib.init.prototype = Notyfyre.lib;
+	/**
+	 * Remove a toast notification
+	 * @param {HTMLElement} toast - The toast element to remove
+	 */
+	removeToast(toast) {
+		// Clear timeout if exists
+		if (toast._timeoutId) {
+			clearTimeout(toast._timeoutId);
+		}
 
-	// Returning the Notyfyre function to be assigned to the window object/module
-	return Notyfyre;
-});
+		// Apply exit animation
+		toast.classList.remove(this.animations[toast._options.animation.in]);
+		toast.classList.add(this.animations[toast._options.animation.out]);
+
+		// Remove after animation completes
+		setTimeout(() => {
+			if (toast && toast.parentNode) {
+				toast.parentNode.removeChild(toast);
+				// Call onClose callback if provided
+				if (typeof toast._options.onClose === 'function') {
+					toast._options.onClose();
+				}
+			}
+		}, 500);
+	}
+
+	/**
+	 * Remove all toast notifications
+	 */
+	removeAll() {
+		const toasts = this.container.querySelectorAll('.notyfyre-notification');
+		toasts.forEach(toast => this.removeToast(toast));
+	}
+
+	/**
+	 * Show a toast notification with specified type
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	show(message, options = {}) {
+		return this.createToast(message, options);
+	}
+
+	/**
+	 * Show a success toast notification
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	success(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'success' });
+	}
+
+	/**
+	 * Show an info toast notification
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	info(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'info' });
+	}
+
+	/**
+	 * Show a warning toast notification
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	warning(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'warning' });
+	}
+
+	/**
+	 * Show an error toast notification
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	error(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'error' });
+	}
+
+	/**
+	 * Show a zen toast notification (light theme)
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	zen(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'zen' });
+	}
+
+	/**
+	 * Show a void toast notification (dark theme)
+	 * @param {string} message - The message to display
+	 * @param {object} options - Custom options for this notification
+	 * @returns {HTMLElement} The created toast notification element
+	 */
+	void(message, options = {}) {
+		return this.createToast(message, { ...options, type: 'void' });
+	}
+
+	/**
+	 * Update container position
+	 * @param {string} position - New position ('top-right', 'top-left', 'bottom-right', 'bottom-left', 'top-center', 'bottom-center')
+	 */
+	updatePosition(position) {
+		this.options.position = position;
+		this.container.className = `notyfyre-container notyfyre-position-${position}`;
+	}
+}
