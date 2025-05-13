@@ -10,7 +10,7 @@ class Notyfyre
     /**
      * Notification message.
      *
-     * @var string
+     * @var string|null
      */
     protected $message;
 
@@ -24,7 +24,7 @@ class Notyfyre
     /**
      * Create a new notification instance.
      *
-     * @param string $message
+     * @param string|null $message
      * @return void
      */
     public function __construct($message = null)
@@ -40,138 +40,91 @@ class Notyfyre
         // Set default icon settings
         $iconConfig = Config::get('notyfyre.icons', []);
         if (isset($iconConfig['enabled']) && $iconConfig['enabled']) {
-            $this->options['icon_enabled'] = true;
-            $this->options['icon_position'] = $iconConfig['position'] ?? 'left';
-            $this->options['icon_size'] = $iconConfig['size'] ?? '24px';
+            $this->options['iconEnabled'] = true;
+            $this->options['iconPosition'] = $iconConfig['position'] ?? 'left';
+            $this->options['iconSize'] = $iconConfig['size'] ?? '24px';
         }
     }
 
     /**
      * Create a new success notification.
      *
-     * @param string $message
+     * @param string|null $message
      * @return self
      */
     public static function success($message = null)
     {
         $notification = new self($message);
-
-        $typeConfig = Config::get('notyfyre.types.success', []);
-
-        if (isset($typeConfig['background'])) {
-            $notification->style(['background' => $typeConfig['background']]);
-        }
-
-        if (isset($typeConfig['class'])) {
-            $notification->className($typeConfig['class']);
-        }
-
-        // Set default icon if enabled
-        if ($notification->options['icon_enabled'] ?? false) {
-            $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $icon = $typeConfig['icon'] ?? ($defaultIcons['success'] ?? null);
-            if ($icon) {
-                $notification->icon($icon);
-            }
-        }
-
-        return $notification;
+        return $notification->applyType('success');
     }
 
     /**
      * Create a new error notification.
      *
-     * @param string $message
+     * @param string|null $message
      * @return self
      */
     public static function error($message = null)
     {
         $notification = new self($message);
-
-        $typeConfig = Config::get('notyfyre.types.error', []);
-
-        if (isset($typeConfig['background'])) {
-            $notification->style(['background' => $typeConfig['background']]);
-        }
-
-        if (isset($typeConfig['class'])) {
-            $notification->className($typeConfig['class']);
-        }
-
-        // Set default icon if enabled
-        if ($notification->options['icon_enabled'] ?? false) {
-            $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $icon = $typeConfig['icon'] ?? ($defaultIcons['error'] ?? null);
-            if ($icon) {
-                $notification->icon($icon);
-            }
-        }
-
-        return $notification;
+        return $notification->applyType('error');
     }
 
     /**
      * Create a new warning notification.
      *
-     * @param string $message
+     * @param string|null $message
      * @return self
      */
     public static function warning($message = null)
     {
         $notification = new self($message);
-
-        $typeConfig = Config::get('notyfyre.types.warning', []);
-
-        if (isset($typeConfig['background'])) {
-            $notification->style(['background' => $typeConfig['background']]);
-        }
-
-        if (isset($typeConfig['class'])) {
-            $notification->className($typeConfig['class']);
-        }
-
-        // Set default icon if enabled
-        if ($notification->options['icon_enabled'] ?? false) {
-            $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $icon = $typeConfig['icon'] ?? ($defaultIcons['warning'] ?? null);
-            if ($icon) {
-                $notification->icon($icon);
-            }
-        }
-
-        return $notification;
+        return $notification->applyType('warning');
     }
 
     /**
      * Create a new info notification.
      *
-     * @param string $message
+     * @param string|null $message
      * @return self
      */
     public static function info($message = null)
     {
         $notification = new self($message);
+        return $notification->applyType('info');
+    }
 
-        $typeConfig = Config::get('notyfyre.types.info', []);
+    /**
+     * Apply notification type configuration.
+     *
+     * @param string $type
+     * @return self
+     */
+    protected function applyType($type)
+    {
+        $typeConfig = Config::get("notyfyre.types.{$type}", []);
 
+        // Apply background if configured
         if (isset($typeConfig['background'])) {
-            $notification->style(['background' => $typeConfig['background']]);
+            $this->style(['background' => $typeConfig['background']]);
         }
 
+        // Apply CSS class if configured
         if (isset($typeConfig['class'])) {
-            $notification->className($typeConfig['class']);
+            $this->className($typeConfig['class']);
         }
 
-        // Set default icon if enabled
-        if ($notification->options['icon_enabled'] ?? false) {
+        // Apply icon if enabled
+        if ($this->options['iconEnabled'] ?? false) {
             $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $icon = $typeConfig['icon'] ?? ($defaultIcons['info'] ?? null);
+            $icon = $typeConfig['icon'] ?? ($defaultIcons[$type] ?? null);
+
             if ($icon) {
-                $notification->icon($icon);
+                $this->icon($icon);
             }
         }
 
-        return $notification;
+        return $this;
     }
 
     /**
@@ -183,7 +136,7 @@ class Notyfyre
     public function icon($iconHtml)
     {
         $this->options['icon'] = $iconHtml;
-        $this->options['icon_enabled'] = true;
+        $this->options['iconEnabled'] = true;
 
         return $this;
     }
@@ -196,7 +149,7 @@ class Notyfyre
      */
     public function iconPosition($position)
     {
-        $this->options['icon_position'] = $position;
+        $this->options['iconPosition'] = $position;
 
         return $this;
     }
@@ -209,7 +162,7 @@ class Notyfyre
      */
     public function iconSize($size)
     {
-        $this->options['icon_size'] = $size;
+        $this->options['iconSize'] = $size;
 
         return $this;
     }
@@ -221,7 +174,7 @@ class Notyfyre
      */
     public function noIcon()
     {
-        $this->options['icon_enabled'] = false;
+        $this->options['iconEnabled'] = false;
 
         return $this;
     }
@@ -299,7 +252,7 @@ class Notyfyre
      */
     public function progressBar($show = true)
     {
-        $this->options['progress_bar'] = $show;
+        $this->options['progressBar'] = $show;
 
         return $this;
     }
@@ -312,7 +265,7 @@ class Notyfyre
      */
     public function progressBarColor($color)
     {
-        $this->options['progress_bar_color'] = $color;
+        $this->options['progressBarColor'] = $color;
 
         return $this;
     }
@@ -327,7 +280,7 @@ class Notyfyre
     public function destination($url, $newWindow = false)
     {
         $this->options['destination'] = $url;
-        $this->options['new_window'] = $newWindow;
+        $this->options['newWindow'] = $newWindow;
 
         return $this;
     }
@@ -340,7 +293,7 @@ class Notyfyre
      */
     public function stopOnFocus($stop = true)
     {
-        $this->options['stop_on_focus'] = $stop;
+        $this->options['stopOnFocus'] = $stop;
 
         return $this;
     }
@@ -466,15 +419,7 @@ class Notyfyre
     public function toScript()
     {
         $options = array_merge(['text' => $this->message], $this->options);
-
-        // Convert snake_case keys to camelCase for JavaScript
-        $jsOptions = [];
-        foreach ($options as $key => $value) {
-            $jsKey = lcfirst(str_replace('_', '', ucwords($key, '_')));
-            $jsOptions[$jsKey] = $value;
-        }
-
-        $optionsJson = json_encode($jsOptions);
+        $optionsJson = json_encode($options);
 
         return "Notyfyre({$optionsJson}).showToast();";
     }

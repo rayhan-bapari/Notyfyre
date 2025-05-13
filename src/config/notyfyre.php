@@ -16,8 +16,8 @@ return [
         'position' => 'right', // left, right, center
         'gravity' => 'top', // top, bottom
         'close' => true, // Show close button
-        'progress_bar' => true, // Show progress bar
-        'stop_on_focus' => true, // Stop timeout on hover
+        'progressBar' => true, // Show progress bar
+        'stopOnFocus' => true, // Stop timeout on hover
         'animation' => [
             'in' => 'fadeIn',
             'out' => 'fadeOut',

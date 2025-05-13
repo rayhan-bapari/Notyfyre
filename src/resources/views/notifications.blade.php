@@ -8,25 +8,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             var notification = {!! json_encode($notyfyreNotifications) !!};
 
+            // Set the message
             var options = notification.options || {};
             options.text = notification.message || '';
 
-            // Convert snake_case keys to camelCase for JavaScript
-            var jsOptions = {};
-            for (var key in options) {
-                if (key === 'icon' || key === 'onClick') {
-                    // Pass icon and onClick directly without modification
-                    jsOptions[key] = options[key];
-                } else {
-                    // Convert other keys from snake_case to camelCase
-                    var jsKey = key.replace(/_([a-z])/g, function(g) {
-                        return g[1].toUpperCase();
-                    });
-                    jsOptions[jsKey] = options[key];
-                }
-            }
-
-            Notyfyre(jsOptions).showToast();
+            // Direct pass-through of options to JS
+            // This maintains camelCase in PHP which matches JS expectations
+            Notyfyre(options).showToast();
         });
     </script>
 @endif
