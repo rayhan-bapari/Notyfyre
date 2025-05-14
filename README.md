@@ -1,5 +1,10 @@
 # Notyfyre: Toaster for Laravel
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/rayhan-bapari/notyfyre.svg)](https://packagist.org/packages/rayhan-bapari/notyfyre)
+[![Total Downloads](https://img.shields.io/packagist/dt/rayhan-bapari/notyfyre.svg)](https://packagist.org/packages/rayhan-bapari/notyfyre)
+[![GitHub Stars](https://img.shields.io/github/stars/rayhan-bapari/notyfyre.svg)](https://github.com/rayhan-bapari/notyfyre)
+[![License](https://img.shields.io/github/license/rayhan-bapari/notyfyre.svg)](https://github.com/rayhan-bapari/notyfyre/blob/main/LICENSE)
+
 Notyfyre is a Laravel package that provides beautiful toast notifications with ZephyrToast's rich functionality. It allows you to create notifications from both PHP controllers and JavaScript with consistent styling and behavior.
 
 ## Features
@@ -242,6 +247,10 @@ toast.info('Message', {
 });
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-Released under the MIT License.
+Released under the MIT License. See [LICENSE](LICENSE) for details.
