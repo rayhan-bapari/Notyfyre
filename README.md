@@ -629,7 +629,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: rayhan.bapari@gmail.com
+- 📧 Email: mdrayhanbapari02@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/rayhan-bapari/notyfyre/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/rayhan-bapari/notyfyre/discussions)
 
