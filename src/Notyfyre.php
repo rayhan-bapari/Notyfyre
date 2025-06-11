@@ -4,205 +4,123 @@ namespace RayhanBapari\Notyfyre;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\View;
 
 class Notyfyre
 {
     /**
-     * Notification message.
-     *
-     * @var string
-     */
-    protected $message;
-
-    /**
-     * Notification options.
+     * Current notification options.
      *
      * @var array
      */
     protected $options = [];
 
     /**
+     * Global default options.
+     *
+     * @var array
+     */
+    protected static $globalDefaults = [];
+
+    /**
      * Create a new notification instance.
      *
-     * @param string $message
+     * @param array $options
+     */
+    public function __construct(array $options = [])
+    {
+        $this->reset();
+        $this->options = array_merge($this->options, $options);
+    }
+
+    /**
+     * Reset options to defaults.
+     *
      * @return void
      */
-    public function __construct($message = null)
+    protected function reset()
     {
-        $this->message = $message;
-
-        // Load default options from config
         $defaults = Config::get('notyfyre.defaults', []);
-        foreach ($defaults as $key => $value) {
-            $this->options[$key] = $value;
-        }
-
-        // Set default icon settings
-        $iconConfig = Config::get('notyfyre.icons', []);
-        if (isset($iconConfig['enabled']) && $iconConfig['enabled']) {
-            $this->options['enableIcon'] = $iconConfig['enabled'];
-        }
+        $this->options = array_merge($defaults, static::$globalDefaults);
     }
 
     /**
-     * Create a new success notification.
+     * Create a success notification.
      *
      * @param string $message
+     * @param array $options
      * @return self
      */
-    public static function success($message = null)
+    public static function success(string $message, array $options = []): self
     {
-        $notification = new self($message);
-        $notification->options['type'] = 'success';
-
         $typeConfig = Config::get('notyfyre.types.success', []);
-        $notification->setTypeOptions($typeConfig);
 
-        return $notification;
+        return (new static($options))
+            ->message($message)
+            ->type('success')
+            ->mergeTypeConfig($typeConfig);
     }
 
     /**
-     * Create a new error notification.
+     * Create an error notification.
      *
      * @param string $message
+     * @param array $options
      * @return self
      */
-    public static function error($message = null)
+    public static function error(string $message, array $options = []): self
     {
-        $notification = new self($message);
-        $notification->options['type'] = 'error';
-
         $typeConfig = Config::get('notyfyre.types.error', []);
-        $notification->setTypeOptions($typeConfig);
 
-        return $notification;
+        return (new static($options))
+            ->message($message)
+            ->type('error')
+            ->mergeTypeConfig($typeConfig);
     }
 
     /**
-     * Create a new warning notification.
+     * Create a warning notification.
      *
      * @param string $message
+     * @param array $options
      * @return self
      */
-    public static function warning($message = null)
+    public static function warning(string $message, array $options = []): self
     {
-        $notification = new self($message);
-        $notification->options['type'] = 'warning';
-
         $typeConfig = Config::get('notyfyre.types.warning', []);
-        $notification->setTypeOptions($typeConfig);
 
-        return $notification;
+        return (new static($options))
+            ->message($message)
+            ->type('warning')
+            ->mergeTypeConfig($typeConfig);
     }
 
     /**
-     * Create a new info notification.
+     * Create an info notification.
      *
      * @param string $message
+     * @param array $options
      * @return self
      */
-    public static function info($message = null)
+    public static function info(string $message, array $options = []): self
     {
-        $notification = new self($message);
-        $notification->options['type'] = 'info';
-
         $typeConfig = Config::get('notyfyre.types.info', []);
-        $notification->setTypeOptions($typeConfig);
 
-        return $notification;
+        return (new static($options))
+            ->message($message)
+            ->type('info')
+            ->mergeTypeConfig($typeConfig);
     }
 
     /**
-     * Create a new zen notification (light theme).
+     * Create a custom notification.
      *
-     * @param string $message
+     * @param array $options
      * @return self
      */
-    public static function zen($message = null)
+    public static function custom(array $options = []): self
     {
-        $notification = new self($message);
-        $notification->options['type'] = 'zen';
-
-        $typeConfig = Config::get('notyfyre.types.zen', []);
-        $notification->setTypeOptions($typeConfig);
-
-        return $notification;
-    }
-
-    /**
-     * Create a new void notification (dark theme).
-     *
-     * @param string $message
-     * @return self
-     */
-    public static function void($message = null)
-    {
-        $notification = new self($message);
-        $notification->options['type'] = 'void';
-
-        $typeConfig = Config::get('notyfyre.types.void', []);
-        $notification->setTypeOptions($typeConfig);
-
-        return $notification;
-    }
-
-    /**
-     * Set type specific options from config.
-     *
-     * @param array $typeConfig
-     * @return void
-     */
-    protected function setTypeOptions($typeConfig)
-    {
-        // Set theme options
-        $theme = [];
-        if (isset($typeConfig['bgColor'])) {
-            $theme['bgColor'] = $typeConfig['bgColor'];
-        }
-        if (isset($typeConfig['textColor'])) {
-            $theme['textColor'] = $typeConfig['textColor'];
-        }
-        if (isset($typeConfig['borderColor'])) {
-            $theme['borderColor'] = $typeConfig['borderColor'];
-        }
-        if (isset($typeConfig['progressTrackColor'])) {
-            $theme['progressTrackColor'] = $typeConfig['progressTrackColor'];
-        }
-        if (isset($typeConfig['progressBarColor'])) {
-            $theme['progressBarColor'] = $typeConfig['progressBarColor'];
-        }
-
-        if (!empty($theme)) {
-            $this->options['theme'] = $theme;
-        }
-
-        // Set class if any
-        if (isset($typeConfig['class'])) {
-            $this->options['className'] = $typeConfig['class'];
-        }
-
-        // Set icon if provided or use default icons
-        if (isset($typeConfig['icon']) && $typeConfig['icon']) {
-            $this->options['icon'] = $typeConfig['icon'];
-        } else {
-            $defaultIcons = Config::get('notyfyre.icons.default', []);
-            $type = $this->options['type'];
-            if (isset($defaultIcons[$type])) {
-                $this->options['icon'] = $defaultIcons[$type];
-            }
-        }
-    }
-
-    /**
-     * Set the notification title.
-     *
-     * @param string $title
-     * @return self
-     */
-    public function title($title)
-    {
-        $this->options['title'] = $title;
-        return $this;
+        return new static($options);
     }
 
     /**
@@ -211,21 +129,33 @@ class Notyfyre
      * @param string $message
      * @return self
      */
-    public function message($message)
+    public function message(string $message): self
     {
-        $this->message = $message;
+        $this->options['message'] = $message;
         return $this;
     }
 
     /**
-     * Set the notification duration.
+     * Set the notification title.
      *
-     * @param int $milliseconds
+     * @param string $title
      * @return self
      */
-    public function duration($milliseconds)
+    public function title(string $title): self
     {
-        $this->options['duration'] = $milliseconds;
+        $this->options['title'] = $title;
+        return $this;
+    }
+
+    /**
+     * Set the notification type.
+     *
+     * @param string $type
+     * @return self
+     */
+    public function type(string $type): self
+    {
+        $this->options['type'] = $type;
         return $this;
     }
 
@@ -235,289 +165,311 @@ class Notyfyre
      * @param string $position
      * @return self
      */
-    public function position($position)
+    public function position(string $position): self
     {
         $this->options['position'] = $position;
         return $this;
     }
 
     /**
-     * Set whether newest notifications should appear on top.
+     * Set the notification duration.
      *
-     * @param bool $value
+     * @param int $milliseconds
      * @return self
      */
-    public function newestOnTop($value = true)
+    public function duration(int $milliseconds): self
     {
-        $this->options['newestOnTop'] = $value;
+        $this->options['duration'] = $milliseconds;
         return $this;
     }
 
     /**
-     * Set the notification progress bar visibility.
+     * Set the notification theme.
      *
-     * @param bool $show
+     * @param string $theme
      * @return self
      */
-    public function showProgress($show = true)
+    public function theme(string $theme): self
     {
-        $this->options['showProgress'] = $show;
-        return $this;
-    }
+        $availableThemes = Config::get('notyfyre.themes', []);
 
-    /**
-     * Set the notification progress bar color.
-     *
-     * @param string $color
-     * @return self
-     */
-    public function progressBarColor($color)
-    {
-        if (!isset($this->options['theme'])) {
-            $this->options['theme'] = [];
-        }
-        $this->options['theme']['progressBarColor'] = $color;
-        return $this;
-    }
-
-    /**
-     * Set the notification progress track color.
-     *
-     * @param string $color
-     * @return self
-     */
-    public function progressTrackColor($color)
-    {
-        if (!isset($this->options['theme'])) {
-            $this->options['theme'] = [];
-        }
-        $this->options['theme']['progressTrackColor'] = $color;
-        return $this;
-    }
-
-    /**
-     * Set the notification close button visibility.
-     *
-     * @param bool $show
-     * @return self
-     */
-    public function showClose($show = true)
-    {
-        $this->options['showClose'] = $show;
-        return $this;
-    }
-
-    /**
-     * Set whether to pause notification timeout on hover.
-     *
-     * @param bool $pause
-     * @return self
-     */
-    public function pauseOnHover($pause = true)
-    {
-        $this->options['pauseOnHover'] = $pause;
-        return $this;
-    }
-
-    /**
-     * Set whether to allow HTML in the message.
-     *
-     * @param bool $allow
-     * @return self
-     */
-    public function allowHtml($allow = true)
-    {
-        $this->options['allowHtml'] = $allow;
-        return $this;
-    }
-
-    /**
-     * Set the notification animations.
-     *
-     * @param string $in
-     * @param string $out
-     * @return self
-     */
-    public function animation($in, $out)
-    {
-        $this->options['animation'] = [
-            'in' => $in,
-            'out' => $out
-        ];
-        return $this;
-    }
-
-    /**
-     * Set the notification theme/style.
-     *
-     * @param array $style
-     * @return self
-     */
-    public function style($style)
-    {
-        if (!isset($this->options['theme'])) {
-            $this->options['theme'] = [];
+        if (in_array($theme, $availableThemes)) {
+            $this->options['theme'] = $theme;
         }
 
-        // Map style properties to theme properties
-        if (isset($style['background'])) {
-            $this->options['theme']['bgColor'] = $style['background'];
-        }
-        if (isset($style['color'])) {
-            $this->options['theme']['textColor'] = $style['color'];
-        }
-        if (isset($style['borderColor'])) {
-            $this->options['theme']['borderColor'] = $style['borderColor'];
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set the complete theme.
-     *
-     * @param array $theme
-     * @return self
-     */
-    public function theme($theme)
-    {
-        $this->options['theme'] = $theme;
-        return $this;
-    }
-
-    /**
-     * Set the notification class name.
-     *
-     * @param string $className
-     * @return self
-     */
-    public function className($className)
-    {
-        $this->options['className'] = $className;
-        return $this;
-    }
-
-    /**
-     * Set the notification click callback.
-     *
-     * @param string $callback JavaScript callback function
-     * @return self
-     */
-    public function onClick($callback)
-    {
-        $this->options['onClick'] = $callback;
-        return $this;
-    }
-
-    /**
-     * Set the notification close callback.
-     *
-     * @param string $callback JavaScript callback function
-     * @return self
-     */
-    public function onClose($callback)
-    {
-        $this->options['onClose'] = $callback;
-        return $this;
-    }
-
-    /**
-     * Set the notification icon visibility.
-     *
-     * @param bool $enable
-     * @return self
-     */
-    public function enableIcon($enable = true)
-    {
-        $this->options['enableIcon'] = $enable;
         return $this;
     }
 
     /**
      * Set the notification icon.
      *
-     * @param string $iconHtml HTML, URL, or CSS class for the icon
+     * @param string|bool $icon
      * @return self
      */
-    public function icon($iconHtml)
+    public function icon($icon): self
     {
-        $this->options['icon'] = $iconHtml;
-        $this->options['enableIcon'] = true;
+        $this->options['icon'] = $icon;
         return $this;
     }
 
     /**
-     * Set whether the icon is a CSS class.
+     * Set whether the notification is closable.
      *
-     * @param bool $isClass
+     * @param bool $closable
      * @return self
      */
-    public function iconIsClass($isClass = true)
+    public function closable(bool $closable = true): self
     {
-        $this->options['isIcon'] = $isClass;
+        $this->options['closable'] = $closable;
         return $this;
     }
 
     /**
-     * Flash the notification for the next request.
+     * Set whether to show progress bar.
      *
+     * @param bool $progress
      * @return self
      */
-    public function flash()
+    public function progress(bool $progress = true): self
     {
-        $notification = [
-            'message' => $this->message,
-            'options' => $this->options
+        $this->options['progress'] = $progress;
+        return $this;
+    }
+
+    /**
+     * Set whether to pause on hover.
+     *
+     * @param bool $pause
+     * @return self
+     */
+    public function pauseOnHover(bool $pause = true): self
+    {
+        $this->options['pauseOnHover'] = $pause;
+        return $this;
+    }
+
+    /**
+     * Set whether to pause on focus loss.
+     *
+     * @param bool $pause
+     * @return self
+     */
+    public function pauseOnFocusLoss(bool $pause = true): self
+    {
+        $this->options['pauseOnFocusLoss'] = $pause;
+        return $this;
+    }
+
+    /**
+     * Set whether to prevent duplicates.
+     *
+     * @param bool $prevent
+     * @return self
+     */
+    public function preventDuplicates(bool $prevent = true): self
+    {
+        $this->options['preventDuplicates'] = $prevent;
+        return $this;
+    }
+
+    /**
+     * Set whether to escape HTML.
+     *
+     * @param bool $escape
+     * @return self
+     */
+    public function escapeHtml(bool $escape = true): self
+    {
+        $this->options['escapeHtml'] = $escape;
+        return $this;
+    }
+
+    /**
+     * Set whether to close on click.
+     *
+     * @param bool $close
+     * @return self
+     */
+    public function closeOnClick(bool $close = true): self
+    {
+        $this->options['closeOnClick'] = $close;
+        return $this;
+    }
+
+    /**
+     * Set action buttons.
+     *
+     * @param array $actions
+     * @return self
+     */
+    public function actions(array $actions): self
+    {
+        $this->options['actions'] = $actions;
+        return $this;
+    }
+
+    /**
+     * Set progress bar color.
+     *
+     * @param string $color
+     * @return self
+     */
+    public function progressColor(string $color): self
+    {
+        $this->options['progressColor'] = $color;
+        return $this;
+    }
+
+    /**
+     * Set animation type and duration.
+     *
+     * @param string $type
+     * @param int|null $duration
+     * @return self
+     */
+    public function animation(string $type, int $duration = null): self
+    {
+        $this->options['animation'] = [
+            'type' => $type,
+            'duration' => $duration ?? Config::get('notyfyre.defaults.animation.duration', 300)
         ];
+        return $this;
+    }
 
-        Session::flash(Config::get('notyfyre.session_key', 'notyfyre'), $notification);
+    /**
+     * Set onShow callback.
+     *
+     * @param string $callback
+     * @return self
+     */
+    public function onShow(string $callback): self
+    {
+        $this->options['onShow'] = $callback;
+        return $this;
+    }
+
+    /**
+     * Set onClose callback.
+     *
+     * @param string $callback
+     * @return self
+     */
+    public function onClose(string $callback): self
+    {
+        $this->options['onClose'] = $callback;
+        return $this;
+    }
+
+    /**
+     * Set onClick callback.
+     *
+     * @param string $callback
+     * @return self
+     */
+    public function onClick(string $callback): self
+    {
+        $this->options['onClick'] = $callback;
+        return $this;
+    }
+
+    /**
+     * Merge type-specific configuration.
+     *
+     * @param array $typeConfig
+     * @return self
+     */
+    protected function mergeTypeConfig(array $typeConfig): self
+    {
+        foreach ($typeConfig as $key => $value) {
+            if (!isset($this->options[$key])) {
+                $this->options[$key] = $value;
+            }
+        }
 
         return $this;
     }
 
     /**
-     * Get the notification as an array.
+     * Flash notification for the next request.
+     *
+     * @return void
+     */
+    public function flash(): void
+    {
+        $flashKey = Config::get('notyfyre.session.flash_key', 'notyfyre_flash');
+        Session::flash($flashKey, $this->toArray());
+    }
+
+    /**
+     * Show notification immediately (store in session for current request).
+     *
+     * @return void
+     */
+    public function now(): void
+    {
+        $sessionKey = Config::get('notyfyre.session.key', 'notyfyre_notifications');
+        $notifications = Session::get($sessionKey, []);
+        $notifications[] = $this->toArray();
+        Session::put($sessionKey, $notifications);
+    }
+
+    /**
+     * Get notification as array.
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
-        return [
-            'message' => $this->message,
-            'options' => $this->options
-        ];
+        return $this->options;
     }
 
     /**
-     * Get the notification as JSON.
+     * Get notification as JSON.
      *
      * @return string
      */
-    public function toJson()
+    public function toJson(): string
     {
         return json_encode($this->toArray());
     }
 
     /**
-     * Get the JavaScript code to display the notification.
+     * Get JavaScript code to show the notification.
      *
      * @return string
      */
-    public function toScript()
+    public function toScript(): string
     {
-        $options = $this->options;
-        $message = $this->message;
+        $options = $this->toArray();
+        $message = $options['message'] ?? '';
         $type = $options['type'] ?? 'info';
 
-        // Create JavaScript representation of options
-        $jsOptions = json_encode($options);
+        // Remove message from options to avoid duplication
+        unset($options['message']);
 
-        // Based on the type, use the appropriate method
-        if (in_array($type, ['success', 'info', 'warning', 'error', 'zen', 'void'])) {
-            return "const toast = new Notyfyre(); toast.{$type}('{$message}', {$jsOptions});";
-        }
+        $jsonOptions = json_encode($options);
 
-        // For custom notifications
-        return "const toast = new Notyfyre(); toast.show('{$message}', {$jsOptions});";
+        return "notify.{$type}('{$message}', {$jsonOptions});";
+    }
+
+    /**
+     * Get global default options.
+     *
+     * @return array
+     */
+    public static function getGlobalDefaults(): array
+    {
+        return static::$globalDefaults;
+    }
+
+    /**
+     * Set global default options.
+     *
+     * @param array $defaults
+     * @return void
+     */
+    public static function setGlobalDefaults(array $defaults): void
+    {
+        static::$globalDefaults = array_merge(static::$globalDefaults, $defaults);
     }
 }

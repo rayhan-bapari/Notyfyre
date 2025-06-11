@@ -1,42 +1,51 @@
-@if (isset($notyfyreAutoloadAssets) && $notyfyreAutoloadAssets)
-    <link rel="stylesheet" href="{{ asset('vendor/notyfyre/css/notyfyre.css') }}">
-    <script src="{{ asset('vendor/notyfyre/js/notyfyre.js') }}"></script>
+@if (isset($notyfyreAutoInject) && $notyfyreAutoInject)
+    @notyfyre
 @endif
 
-@if (isset($notyfyreNotifications))
+@if (isset($notyfyreNotifications) && !empty($notyfyreNotifications))
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize ZephyrToast
-            const toast = new Notyfyre();
+        (function() {
+            // Store notifications for JavaScript to process
+            window.notyfyreNotifications = @json($notyfyreNotifications);
 
-            var notification = {!! json_encode($notyfyreNotifications) !!};
-            var message = notification.message || '';
-            var options = notification.options || {};
-            var type = options.type || 'info';
+            // Auto-initialize if notify is available
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof window.notify !== 'undefined') {
+                    // Process Laravel notifications
+                    if (window.notyfyreNotifications) {
+                        const notifications = Array.isArray(window.notyfyreNotifications) ?
+                            window.notyfyreNotifications :
+                            [window.notyfyreNotifications];
 
-            // Call the appropriate method based on notification type
-            switch (type) {
-                case 'success':
-                    toast.success(message, options);
-                    break;
-                case 'error':
-                    toast.error(message, options);
-                    break;
-                case 'warning':
-                    toast.warning(message, options);
-                    break;
-                case 'info':
-                    toast.info(message, options);
-                    break;
-                case 'zen':
-                    toast.zen(message, options);
-                    break;
-                case 'void':
-                    toast.void(message, options);
-                    break;
-                default:
-                    toast.show(message, options);
-            }
-        });
+                        notifications.forEach(function(notification) {
+                            if (notification.message) {
+                                const type = notification.type || 'info';
+                                const message = notification.message;
+
+                                // Remove message and type from options to avoid duplication
+                                const options = {
+                                    ...notification
+                                };
+                                delete options.message;
+                                delete options.type;
+
+                                // Show notification
+                                if (typeof window.notify[type] === 'function') {
+                                    window.notify[type](message, options);
+                                } else {
+                                    window.notify.show(message, {
+                                        ...options,
+                                        type: type
+                                    });
+                                }
+                            }
+                        });
+
+                        // Clear notifications
+                        delete window.notyfyreNotifications;
+                    }
+                }
+            });
+        })();
     </script>
 @endif

@@ -1,472 +1,723 @@
 /**
- * Notyfyre JS 2.0.0
- * ZephyrToast implementation for Laravel
- *
- * Copyright (C) 2025 Rayhan Bapari
- * MIT Licensed
+ * Notyfyre - Modern Toast Notification Library
+ * Version: 2.0.0
+ * Author: Rayhan Bapari
+ * License: MIT
  */
 
-class Notyfyre {
-	constructor(options = {}) {
-		// Default configuration
-		this.defaults = {
-			position: 'top-right',
-			newestOnTop: true,
-			type: 'info',
-			duration: 5000,
-			pauseOnHover: true,
-			showProgress: true,
-			animation: {
-				in: 'fadeIn',
-				out: 'fadeOut',
-			},
-			message: '',
-			title: '',
-			allowHtml: false,
-			enableIcon: true,
-			icon: null,
-			isIcon: false,
-			showClose: true,
-			onClose: null,
-			onClick: null,
-		};
+class NotyfyreManager {
+    constructor(config = {}) {
+        this.config = {
+            position: 'top-right',
+            duration: 5000,
+            closable: true,
+            pauseOnHover: true,
+            pauseOnFocusLoss: true,
+            progress: true,
+            theme: 'default',
+            maxVisible: 5,
+            preventDuplicates: false,
+            escapeHtml: true,
+            closeOnClick: false,
+            animation: {
+                type: 'slide',
+                duration: 300
+            },
+            accessibility: {
+                role: 'alert',
+                ariaLive: 'polite',
+                ariaRelevant: 'additions text',
+                closeAriaLabel: 'Close notification'
+            },
+            ...config
+        };
 
-		// Merge options with defaults
-		this.options = { ...this.defaults, ...options };
+        this.containers = new Map();
+        this.activeNotifications = new Map();
+        this.queue = new Map();
+        this.idCounter = 0;
 
-		// Initialize the container
-		this.initializeContainer();
+        this.icons = {
+            success: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+            error: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+            warning: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+            info: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+        };
 
-		// Animation classes
-		this.animations = {
-			fadeIn: 'notyfyre_animate_fadeIn',
-			fadeOut: 'notyfyre_animate_fadeOut',
-			slideInLeft: 'notyfyre_animate_slideInLeft',
-			slideOutLeft: 'notyfyre_animate_slideOutLeft',
-			slideInRight: 'notyfyre_animate_slideInRight',
-			slideOutRight: 'notyfyre_animate_slideOutRight',
-			slideInDown: 'notyfyre_animate_slideInDown',
-			slideOutUp: 'notyfyre_animate_slideOutUp',
-			slideInUp: 'notyfyre_animate_slideInUp',
-			slideOutDown: 'notyfyre_animate_slideOutDown',
-			bounceIn: 'notyfyre_animate_bounceIn',
-			bounceOut: 'notyfyre_animate_bounceOut',
-			zoomIn: 'notyfyre_animate_zoomIn',
-			zoomOut: 'notyfyre_animate_zoomOut',
-		};
+        this.init();
+    }
 
-		// Toast class types
-		this.types = {
-			success: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>',
-				bgColor: '#e3f7ed',
-				textColor: '#3bad71',
-				borderColor: '#b5eace',
-			},
-			info: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>',
-				bgColor: '#dff0fa',
-				textColor: '#2385ba',
-				borderColor: '#a9d7f1',
-			},
-			warning: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
-				bgColor: '#fff5da',
-				textColor: '#d9a209',
-				borderColor: '#ffe59d',
-			},
-			error: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>',
-				bgColor: '#fde8e4',
-				textColor: '#cc563d',
-				borderColor: '#f9c1b6',
-			},
-			zen: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/></svg>',
-				bgColor: '#f4f7f9',
-				textColor: '#2e3a59',
-				borderColor: '#d8e1e8',
-			},
-			void: {
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/></svg>',
-				bgColor: '#111113',
-				textColor: '#f1f1f1',
-				borderColor: '#111113',
-			},
-		};
-	}
+    init() {
+        this.injectStyles();
+        this.setupGlobalEventListeners();
+        this.processLaravelNotifications();
+    }
 
-	/**
-	 * Initialize the container for toast notifications
-	 */
-	initializeContainer() {
-		// Get or create the container
-		this.container = document.getElementById('notyfyre-container');
-		if (!this.container) {
-			this.container = document.createElement('div');
-			this.container.id = 'notyfyre-container';
-			document.body.appendChild(this.container);
-		}
+    injectStyles() {
+        if (document.querySelector('[data-notyfyre-styles]')) return;
 
-		// Set position class
-		this.container.className = `notyfyre-container notyfyre-position-${this.options.position}`;
-	}
+        // Check if external CSS is loaded
+        const existingLink = document.querySelector('link[href*="notyfyre"]');
+        if (existingLink) return;
 
-	/**
-	 * Create a new toast notification
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	createToast(message, options = {}) {
-		// Merge options with defaults, including theme properties
-		const toastOptions = {
-			...this.options,
-			...options,
-			message,
-			theme: {
-				// Merge theme options (allow user override)
-				bgColor: options.theme?.bgColor || this.types[options.type]?.bgColor,
-				textColor: options.theme?.textColor || this.types[options.type]?.textColor,
-				borderColor: options.theme?.borderColor || this.types[options.type]?.borderColor,
-				progressTrackColor: options.theme?.progressTrackColor,
-				progressBarColor: options.theme?.progressBarColor,
-			},
-		};
+        // Inject minimal required styles
+        const style = document.createElement('style');
+        style.setAttribute('data-notyfyre-styles', '');
+        style.textContent = this.getMinimalCSS();
+        document.head.appendChild(style);
+    }
 
-		// Update position if provided in options
-		if (options.position && options.position !== this.options.position) {
-			this.updatePosition(options.position);
-		}
+    getMinimalCSS() {
+        return `
+            .notyfyre-container {
+                position: fixed;
+                z-index: 9999;
+                pointer-events: none;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 100%;
+            }
+            .notyfyre-container.top-right { top: 16px; right: 16px; align-items: flex-end; }
+            .notyfyre-container.top-left { top: 16px; left: 16px; align-items: flex-start; }
+            .notyfyre-container.bottom-right { bottom: 16px; right: 16px; align-items: flex-end; }
+            .notyfyre-container.bottom-left { bottom: 16px; left: 16px; align-items: flex-start; }
+            .notyfyre-container.top-center { top: 16px; left: 50%; transform: translateX(-50%); align-items: center; }
+            .notyfyre-container.bottom-center { bottom: 16px; left: 50%; transform: translateX(-50%); align-items: center; }
+            .notyfyre-container.center { top: 50%; left: 50%; transform: translate(-50%, -50%); align-items: center; }
 
-		// Create toast element
-		const toast = document.createElement('div');
-		toast.className = `notyfyre-notification notyfyre_animate ${this.animations[toastOptions.animation.in]}`;
-		toast.style.backgroundColor = toastOptions.theme.bgColor;
-		toast.style.color = toastOptions.theme.textColor;
-		toast.style.borderColor = toastOptions.theme.borderColor;
+            .notyfyre-notification {
+                display: flex;
+                align-items: flex-start;
+                padding: 12px 16px;
+                border-radius: 8px;
+                background: white;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                max-width: 400px;
+                min-width: 300px;
+                pointer-events: auto;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
 
-		// Add class if provided
-		if (toastOptions.className) {
-			toast.classList.add(toastOptions.className);
-		}
+            .notyfyre-notification.success { border-left: 4px solid #10b981; background: #f0fdf4; color: #065f46; }
+            .notyfyre-notification.error { border-left: 4px solid #ef4444; background: #fef2f2; color: #991b1b; }
+            .notyfyre-notification.warning { border-left: 4px solid #f59e0b; background: #fffbeb; color: #92400e; }
+            .notyfyre-notification.info { border-left: 4px solid #3b82f6; background: #eff6ff; color: #1e40af; }
 
-		// Create toast body
-		const toastBody = document.createElement('div');
-		toastBody.className = 'notyfyre-notification-body';
+            .notyfyre-icon { margin-right: 12px; flex-shrink: 0; width: 20px; height: 20px; }
+            .notyfyre-content { flex: 1; min-width: 0; }
+            .notyfyre-title { font-weight: 600; margin: 0 0 4px 0; font-size: 14px; }
+            .notyfyre-message { margin: 0; font-size: 14px; line-height: 1.4; }
+            .notyfyre-close {
+                background: none; border: none; cursor: pointer; padding: 4px; margin-left: 8px;
+                opacity: 0.5; font-size: 18px; line-height: 1; flex-shrink: 0;
+            }
+            .notyfyre-close:hover { opacity: 1; }
 
-		//Adds an icon to the toast notification if `enableIcon` is not explicitly set to false.
-		if (toastOptions.enableIcon !== false) {
-			const iconDiv = document.createElement('div');
-			iconDiv.className = 'notyfyre-notification-icon';
+            .notyfyre-progress {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 4px;
+                background: currentColor;
+                opacity: 0.3;
+                transform-origin: left;
+                transform: scaleX(0);
+                transition: transform linear;
+            }
 
-			// Check if a custom icon is provided
-			if (toastOptions.icon) {
-				if (typeof toastOptions.icon === 'string') {
-					if (toastOptions.isIcon) {
-						if (toastOptions.icon.match(/\.(jpeg|jpg|gif|png)$/i)) {
-							throw new Error('isIcon is true, but an image URL was provided for the icon.');
-						}
-						iconDiv.innerHTML = `<i class="${toastOptions.icon}"></i>`;
-					} else {
-						if (toastOptions.icon.match(/\.(jpeg|jpg|gif|png)$/i)) {
-							iconDiv.innerHTML = `<img src="${toastOptions.icon}" alt="icon" style="width: 16px; height: 16px;" />`;
-						} else {
-							iconDiv.innerHTML = toastOptions.icon;
-						}
-					}
-				}
-				// If it's an object with specific properties
-				else if (typeof toastOptions.icon === 'object') {
-					if (toastOptions.icon.url) {
-						// Image URL
-						iconDiv.innerHTML = `<img src="${toastOptions.icon.url}" alt="icon" style="width: ${
-							toastOptions.icon.width || '16px'
-						}; height: ${toastOptions.icon.height || '16px'};" />`;
-					} else if (toastOptions.icon.fontAwesome) {
-						// FontAwesome with specific class
-						iconDiv.innerHTML = `<i class="${toastOptions.icon.fontAwesome}"></i>`;
-					} else if (toastOptions.icon.svg) {
-						// SVG content
-						iconDiv.innerHTML = toastOptions.icon.svg;
-					}
-				}
-			} else {
-				// Use default icon based on type
-				iconDiv.innerHTML = this.types[toastOptions.type].icon;
-			}
-			toastBody.appendChild(iconDiv);
-		}
+            .notyfyre-actions {
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+            }
 
-		// Add content
-		const contentDiv = document.createElement('div');
-		contentDiv.className = 'notyfyre-notification-content';
+            .notyfyre-action {
+                background: rgba(0, 0, 0, 0.1);
+                border: none;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .notyfyre-action:hover { background: rgba(0, 0, 0, 0.2); }
 
-		// Add title if provided
-		if (toastOptions.title) {
-			const titleDiv = document.createElement('div');
-			titleDiv.className = 'notyfyre-notification-title';
-			titleDiv.textContent = toastOptions.title;
-			contentDiv.appendChild(titleDiv);
-		}
+            .notyfyre-enter { opacity: 0; transform: translateY(-20px); }
+            .notyfyre-exit { opacity: 0; transform: translateY(-20px); pointer-events: none; }
 
-		// Add message (supports HTML if allowHtml is true)
-		const messageDiv = document.createElement('div');
-		messageDiv.className = 'notyfyre-notification-message';
-		if (toastOptions.allowHtml) {
-			messageDiv.innerHTML = toastOptions.message;
-		} else {
-			messageDiv.textContent = toastOptions.message;
-		}
-		contentDiv.appendChild(messageDiv);
+            @media (max-width: 480px) {
+                .notyfyre-container { left: 8px !important; right: 8px !important; transform: none !important; }
+                .notyfyre-notification { min-width: auto; max-width: none; }
+            }
+        `;
+    }
 
-		toastBody.appendChild(contentDiv);
-		toast.appendChild(toastBody);
+    setupGlobalEventListeners() {
+        // ESC key to close all notifications
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.clearAll();
+            }
+        });
 
-		// Add close button if enabled
-		if (toastOptions.showClose) {
-			const closeButton = document.createElement('button');
-			closeButton.type = 'button';
-			closeButton.className = 'notyfyre-notification-close';
-			closeButton.innerHTML = '&times;';
-			closeButton.style.color = toastOptions.theme.textColor;
-			closeButton.addEventListener('click', () => this.removeToast(toast));
-			toastBody.appendChild(closeButton);
-		}
+        // Window focus/blur for pauseOnFocusLoss
+        let wasBlurred = false;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                wasBlurred = true;
+                this.pauseAll();
+            } else if (wasBlurred) {
+                this.resumeAll();
+                wasBlurred = false;
+            }
+        });
+    }
 
-		// Add progress bar if enabled
-		if (toastOptions.showProgress && toastOptions.duration > 0) {
-			const progressBar = document.createElement('div');
-			progressBar.className =
-				toastOptions.type === 'void' ? 'notyfyre-progress-bar-void' : 'notyfyre-progress-bar';
+    processLaravelNotifications() {
+        // Process notifications from Laravel
+        if (window.notyfyreNotifications) {
+            const notifications = Array.isArray(window.notyfyreNotifications)
+                ? window.notyfyreNotifications
+                : [window.notyfyreNotifications];
 
-			// Apply user/default background (track)
-			if (toastOptions.theme.progressTrackColor) {
-				progressBar.style.backgroundColor = toastOptions.theme.progressTrackColor;
-			}
+            notifications.forEach(notification => {
+                if (notification.message) {
+                    this.show(notification.message, notification);
+                }
+            });
 
-			const progressBarFill = document.createElement('div');
-			progressBarFill.className =
-				toastOptions.type === 'void' ? 'notyfyre-progress-bar-void-fill' : 'notyfyre-progress-bar-fill';
+            // Clear the global variable
+            delete window.notyfyreNotifications;
+        }
+    }
 
-			// Apply user/default fill color
-			if (toastOptions.theme.progressBarColor) {
-				progressBarFill.style.backgroundColor = toastOptions.theme.progressBarColor;
-			}
+    generateId() {
+        return `notyfyre-${++this.idCounter}`;
+    }
 
-			progressBar.appendChild(progressBarFill);
-			toast.appendChild(progressBar);
+    getContainer(position) {
+        if (this.containers.has(position)) {
+            return this.containers.get(position);
+        }
 
-			setTimeout(() => {
-				progressBarFill.style.width = '0%';
-				progressBarFill.style.transitionDuration = `${toastOptions.duration}ms`;
-			}, 10);
-		}
+        const container = document.createElement('div');
+        container.className = `notyfyre-container ${position}`;
+        container.setAttribute('role', 'region');
+        container.setAttribute('aria-label', 'Notifications');
 
-		// Add click handler if provided
-		if (typeof toastOptions.onClick === 'function') {
-			toast.style.cursor = 'pointer';
-			toast.addEventListener('click', e => {
-				if (
-					e.target !== toast &&
-					e.target.className !== 'notyfyre-notification-message' &&
-					e.target.className !== 'notyfyre-notification-content'
-				)
-					return;
-				toastOptions.onClick();
-			});
-		}
+        document.body.appendChild(container);
+        this.containers.set(position, container);
 
-		// Store options with the toast
-		toast._options = toastOptions;
+        return container;
+    }
 
-		// Add to container
-		if (toastOptions.newestOnTop) {
-			this.container.prepend(toast);
-		} else {
-			this.container.appendChild(toast);
-		}
+    escapeHtml(unsafe) {
+        if (typeof unsafe !== 'string') return unsafe;
 
-		// Make toast visible
-		setTimeout(() => {
-			toast.style.opacity = '1';
-		}, 10);
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
-		// Auto-remove after duration
-		if (toastOptions.duration > 0) {
-			toast._timeoutId = setTimeout(() => {
-				this.removeToast(toast);
-			}, toastOptions.duration);
-		}
+    hasDuplicate(message, type, position) {
+        for (const [id, notification] of this.activeNotifications) {
+            const opts = notification.options;
+            if (opts.message === message && opts.type === type && opts.position === position) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-		// Add pause-on-hover functionality
-		if (toastOptions.pauseOnHover && toastOptions.duration > 0) {
-			let remainingTime = toastOptions.duration;
+    createNotificationElement(options) {
+        const notification = document.createElement('div');
+        notification.className = `notyfyre-notification ${options.type || ''}`;
+        notification.id = options.id;
+        notification.setAttribute('role', options.accessibility?.role || this.config.accessibility.role);
+        notification.setAttribute('aria-live', options.accessibility?.ariaLive || this.config.accessibility.ariaLive);
+        notification.tabIndex = 0;
 
-			// Pause progress and timer when user hovers over the toast
-			toast.addEventListener('mouseenter', () => {
-				// Clear the timeout to prevent auto-removal
-				if (toast._timeoutId) {
-					clearTimeout(toast._timeoutId);
-					toast._timeoutId = null;
-				}
+        // Apply theme
+        if (options.theme && options.theme !== 'default') {
+            notification.classList.add(`theme-${options.theme}`);
+        }
 
-				// Stop the progress bar animation
-				if (toastOptions.showProgress) {
-					const progressBarFill = toast.querySelector(
-						'.notyfyre-progress-bar-fill, .notyfyre-progress-bar-void-fill',
-					);
-					if (progressBarFill) {
-						// Calculate remaining time based on current width
-						const currentWidth = parseFloat(getComputedStyle(progressBarFill).width);
-						const fullWidth = parseFloat(getComputedStyle(progressBarFill.parentElement).width);
-						remainingTime = toastOptions.duration * (currentWidth / fullWidth);
+        let html = '';
 
-						// Pause animation by removing transition and keeping current width
-						progressBarFill.style.transition = 'none';
-						progressBarFill.style.width = `${(currentWidth / fullWidth) * 100}%`;
-					}
-				}
-			});
+        // Icon
+        if (options.icon !== false) {
+            const iconContent = options.icon || this.icons[options.type] || '';
+            html += `<div class="notyfyre-icon">${iconContent}</div>`;
+        }
 
-			// Resume progress and timer when user's mouse leaves the toast
-			toast.addEventListener('mouseleave', () => {
-				// Restart the timeout with remaining time
-				if (!toast._timeoutId && remainingTime > 0) {
-					toast._timeoutId = setTimeout(() => {
-						this.removeToast(toast);
-					}, remainingTime);
+        // Content
+        html += '<div class="notyfyre-content">';
 
-					// Restart the progress bar animation
-					if (toastOptions.showProgress) {
-						const progressBarFill = toast.querySelector(
-							'.notyfyre-progress-bar-fill, .notyfyre-progress-bar-void-fill',
-						);
-						if (progressBarFill) {
-							// Resume animation
-							setTimeout(() => {
-								progressBarFill.style.transition = `width ${remainingTime}ms linear`;
-								progressBarFill.style.width = '0%';
-							}, 10);
-						}
-					}
-				}
-			});
-		}
+        if (options.title) {
+            html += `<div class="notyfyre-title">${options.escapeHtml ? this.escapeHtml(options.title) : options.title}</div>`;
+        }
 
-		return toast;
-	}
+        html += `<div class="notyfyre-message">${options.escapeHtml ? this.escapeHtml(options.message) : options.message}</div>`;
 
-	/**
-	 * Remove a toast notification
-	 * @param {HTMLElement} toast - The toast element to remove
-	 */
-	removeToast(toast) {
-		// Clear timeout if exists
-		if (toast._timeoutId) {
-			clearTimeout(toast._timeoutId);
-		}
+        // Actions
+        if (options.actions && options.actions.length) {
+            html += '<div class="notyfyre-actions">';
+            options.actions.forEach((action, index) => {
+                html += `<button class="notyfyre-action" data-action="${index}">${action.text}</button>`;
+            });
+            html += '</div>';
+        }
 
-		// Apply exit animation
-		toast.classList.remove(this.animations[toast._options.animation.in]);
-		toast.classList.add(this.animations[toast._options.animation.out]);
+        html += '</div>';
 
-		// Remove after animation completes
-		setTimeout(() => {
-			if (toast && toast.parentNode) {
-				toast.parentNode.removeChild(toast);
-				// Call onClose callback if provided
-				if (typeof toast._options.onClose === 'function') {
-					toast._options.onClose();
-				}
-			}
-		}, 500);
-	}
+        // Close button
+        if (options.closable) {
+            html += `<button class="notyfyre-close" aria-label="${options.accessibility?.closeAriaLabel || this.config.accessibility.closeAriaLabel}">×</button>`;
+        }
 
-	/**
-	 * Remove all toast notifications
-	 */
-	removeAll() {
-		const toasts = this.container.querySelectorAll('.notyfyre-notification');
-		toasts.forEach(toast => this.removeToast(toast));
-	}
+        notification.innerHTML = html;
 
-	/**
-	 * Show a toast notification with specified type
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	show(message, options = {}) {
-		return this.createToast(message, options);
-	}
+        // Progress bar
+        if (options.progress && options.duration > 0) {
+            const progress = document.createElement('div');
+            progress.className = 'notyfyre-progress';
+            if (options.progressColor) {
+                progress.style.background = options.progressColor;
+            }
+            notification.appendChild(progress);
+        }
 
-	/**
-	 * Show a success toast notification
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	success(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'success' });
-	}
+        return notification;
+    }
 
-	/**
-	 * Show an info toast notification
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	info(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'info' });
-	}
+    setupNotificationEvents(element, options) {
+        const { id } = options;
 
-	/**
-	 * Show a warning toast notification
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	warning(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'warning' });
-	}
+        // Close button
+        const closeBtn = element.querySelector('.notyfyre-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.remove(id);
+            });
+        }
 
-	/**
-	 * Show an error toast notification
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	error(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'error' });
-	}
+        // Action buttons
+        const actionBtns = element.querySelectorAll('.notyfyre-action');
+        actionBtns.forEach((btn, index) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = options.actions[index];
+                if (action.callback) {
+                    action.callback(element, this);
+                }
+                if (action.close !== false) {
+                    this.remove(id);
+                }
+            });
+        });
 
-	/**
-	 * Show a zen toast notification (light theme)
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	zen(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'zen' });
-	}
+        // Click to close
+        if (options.closeOnClick) {
+            element.addEventListener('click', () => {
+                this.remove(id);
+            });
+        }
 
-	/**
-	 * Show a void toast notification (dark theme)
-	 * @param {string} message - The message to display
-	 * @param {object} options - Custom options for this notification
-	 * @returns {HTMLElement} The created toast notification element
-	 */
-	void(message, options = {}) {
-		return this.createToast(message, { ...options, type: 'void' });
-	}
+        // Custom onClick
+        if (options.onClick) {
+            element.addEventListener('click', () => {
+                if (typeof options.onClick === 'function') {
+                    options.onClick(element, this);
+                } else if (typeof options.onClick === 'string') {
+                    // Support for string callbacks (useful for Laravel)
+                    try {
+                        new Function('element', 'notyfyre', options.onClick)(element, this);
+                    } catch (e) {
+                        console.warn('Notyfyre: Invalid onClick callback', e);
+                    }
+                }
+            });
+        }
 
-	/**
-	 * Update container position
-	 * @param {string} position - New position ('top-right', 'top-left', 'bottom-right', 'bottom-left', 'top-center', 'bottom-center')
-	 */
-	updatePosition(position) {
-		this.options.position = position;
-		this.container.className = `notyfyre-container notyfyre-position-${position}`;
-	}
+        // Pause on hover
+        if (options.pauseOnHover) {
+            element.addEventListener('mouseenter', () => this.pause(id));
+            element.addEventListener('mouseleave', () => this.resume(id));
+        }
+    }
+
+    startProgress(element, duration) {
+        const progress = element.querySelector('.notyfyre-progress');
+        if (progress) {
+            setTimeout(() => {
+                progress.style.transition = `transform ${duration}ms linear`;
+                progress.style.transform = 'scaleX(1)';
+            }, 10);
+        }
+    }
+
+    animate(element, type, isExit = false) {
+        const animationType = type || this.config.animation.type;
+
+        if (isExit) {
+            element.classList.add('notyfyre-exit');
+        } else {
+            element.classList.add('notyfyre-enter');
+            // Remove enter class after a short delay
+            setTimeout(() => {
+                element.classList.remove('notyfyre-enter');
+            }, 10);
+        }
+    }
+
+    show(message, options = {}) {
+        const finalOptions = { ...this.config, ...options, message, id: this.generateId() };
+
+        // Check for duplicates
+        if (finalOptions.preventDuplicates && this.hasDuplicate(message, finalOptions.type, finalOptions.position)) {
+            return null;
+        }
+
+        const container = this.getContainer(finalOptions.position);
+        const visibleCount = container.children.length;
+
+        // Check if we need to queue
+        if (visibleCount >= finalOptions.maxVisible) {
+            this.addToQueue(finalOptions);
+            return null;
+        }
+
+        return this.createAndShowNotification(finalOptions);
+    }
+
+    createAndShowNotification(options) {
+        const element = this.createNotificationElement(options);
+        const container = this.getContainer(options.position);
+
+        // Store notification data
+        let timeoutId = null;
+        const notificationData = {
+            element,
+            options,
+            timeoutId,
+            startTime: Date.now(),
+            remainingTime: options.duration,
+            isPaused: false
+        };
+
+        this.activeNotifications.set(options.id, notificationData);
+
+        // Setup events
+        this.setupNotificationEvents(element, options);
+
+        // Add to DOM with animation
+        this.animate(element, options.animation?.type);
+        container.appendChild(element);
+
+        // Start auto-close timer
+        if (options.duration > 0) {
+            timeoutId = setTimeout(() => {
+                this.remove(options.id);
+            }, options.duration);
+            notificationData.timeoutId = timeoutId;
+        }
+
+        // Start progress animation
+        if (options.progress && options.duration > 0) {
+            this.startProgress(element, options.duration);
+        }
+
+        // Call onShow callback
+        if (options.onShow) {
+            if (typeof options.onShow === 'function') {
+                options.onShow(element, this);
+            } else if (typeof options.onShow === 'string') {
+                try {
+                    new Function('element', 'notyfyre', options.onShow)(element, this);
+                } catch (e) {
+                    console.warn('Notyfyre: Invalid onShow callback', e);
+                }
+            }
+        }
+
+        return options.id;
+    }
+
+    addToQueue(options) {
+        const position = options.position;
+        if (!this.queue.has(position)) {
+            this.queue.set(position, []);
+        }
+        this.queue.get(position).push(options);
+    }
+
+    processQueue(position) {
+        if (!this.queue.has(position) || this.queue.get(position).length === 0) {
+            return;
+        }
+
+        const container = this.getContainer(position);
+        const visibleCount = container.children.length;
+        const maxVisible = this.config.maxVisible;
+
+        if (visibleCount < maxVisible) {
+            const queuedOptions = this.queue.get(position).shift();
+            this.createAndShowNotification(queuedOptions);
+
+            // Remove empty queue
+            if (this.queue.get(position).length === 0) {
+                this.queue.delete(position);
+            }
+        }
+    }
+
+    remove(id) {
+        const notificationData = this.activeNotifications.get(id);
+        if (!notificationData) return false;
+
+        const { element, options, timeoutId } = notificationData;
+
+        // Clear timeout
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+
+        // Call onClose callback
+        if (options.onClose) {
+            if (typeof options.onClose === 'function') {
+                options.onClose(element, this);
+            } else if (typeof options.onClose === 'string') {
+                try {
+                    new Function('element', 'notyfyre', options.onClose)(element, this);
+                } catch (e) {
+                    console.warn('Notyfyre: Invalid onClose callback', e);
+                }
+            }
+        }
+
+        // Animate out
+        this.animate(element, options.animation?.type, true);
+
+        // Remove from DOM after animation
+        setTimeout(() => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+            this.activeNotifications.delete(id);
+            this.processQueue(options.position);
+        }, options.animation?.duration || this.config.animation.duration);
+
+        return true;
+    }
+
+    pause(id) {
+        const notificationData = this.activeNotifications.get(id);
+        if (!notificationData || notificationData.isPaused) return;
+
+        notificationData.isPaused = true;
+        const elapsed = Date.now() - notificationData.startTime;
+        notificationData.remainingTime = Math.max(0, notificationData.options.duration - elapsed);
+
+        // Clear timeout
+        if (notificationData.timeoutId) {
+            clearTimeout(notificationData.timeoutId);
+            notificationData.timeoutId = null;
+        }
+
+        // Pause progress bar
+        const progress = notificationData.element.querySelector('.notyfyre-progress');
+        if (progress) {
+            progress.style.transition = 'none';
+            const currentScale = elapsed / notificationData.options.duration;
+            progress.style.transform = `scaleX(${Math.min(currentScale, 1)})`;
+        }
+    }
+
+    resume(id) {
+        const notificationData = this.activeNotifications.get(id);
+        if (!notificationData || !notificationData.isPaused) return;
+
+        notificationData.isPaused = false;
+        notificationData.startTime = Date.now();
+
+        // Restart timeout
+        if (notificationData.remainingTime > 0) {
+            notificationData.timeoutId = setTimeout(() => {
+                this.remove(id);
+            }, notificationData.remainingTime);
+        }
+
+        // Resume progress bar
+        const progress = notificationData.element.querySelector('.notyfyre-progress');
+        if (progress && notificationData.remainingTime > 0) {
+            setTimeout(() => {
+                progress.style.transition = `transform ${notificationData.remainingTime}ms linear`;
+                progress.style.transform = 'scaleX(1)';
+            }, 10);
+        }
+    }
+
+    pauseAll() {
+        for (const [id] of this.activeNotifications) {
+            this.pause(id);
+        }
+    }
+
+    resumeAll() {
+        for (const [id] of this.activeNotifications) {
+            this.resume(id);
+        }
+    }
+
+    update(id, newOptions) {
+        const notificationData = this.activeNotifications.get(id);
+        if (!notificationData) return false;
+
+        const { element, options } = notificationData;
+
+        // Update message
+        if (newOptions.message !== undefined) {
+            const messageEl = element.querySelector('.notyfyre-message');
+            if (messageEl) {
+                messageEl.innerHTML = newOptions.escapeHtml !== false ?
+                    this.escapeHtml(newOptions.message) : newOptions.message;
+            }
+        }
+
+        // Update title
+        if (newOptions.title !== undefined) {
+            const titleEl = element.querySelector('.notyfyre-title');
+            if (titleEl) {
+                titleEl.innerHTML = newOptions.escapeHtml !== false ?
+                    this.escapeHtml(newOptions.title) : newOptions.title;
+            } else if (newOptions.title) {
+                const contentEl = element.querySelector('.notyfyre-content');
+                const messageEl = contentEl.querySelector('.notyfyre-message');
+                const titleEl = document.createElement('div');
+                titleEl.className = 'notyfyre-title';
+                titleEl.innerHTML = newOptions.escapeHtml !== false ?
+                    this.escapeHtml(newOptions.title) : newOptions.title;
+                contentEl.insertBefore(titleEl, messageEl);
+            }
+        }
+
+        // Update type
+        if (newOptions.type && newOptions.type !== options.type) {
+            element.classList.remove(options.type);
+            element.classList.add(newOptions.type);
+
+            // Update icon
+            const iconEl = element.querySelector('.notyfyre-icon');
+            if (iconEl && newOptions.icon !== false) {
+                iconEl.innerHTML = newOptions.icon || this.icons[newOptions.type] || '';
+            }
+        }
+
+        // Update stored options
+        Object.assign(notificationData.options, newOptions);
+
+        return true;
+    }
+
+    clearAll() {
+        const ids = Array.from(this.activeNotifications.keys());
+        ids.forEach(id => this.remove(id));
+        this.queue.clear();
+        return ids.length;
+    }
+
+    clearByPosition(position) {
+        const ids = [];
+        for (const [id, data] of this.activeNotifications) {
+            if (data.options.position === position) {
+                ids.push(id);
+            }
+        }
+        ids.forEach(id => this.remove(id));
+        this.queue.delete(position);
+        return ids.length;
+    }
+
+    configure(newConfig) {
+        Object.assign(this.config, newConfig);
+        return this.config;
+    }
+
+    getActive() {
+        const result = [];
+        for (const [id, data] of this.activeNotifications) {
+            result.push({
+                id,
+                type: data.options.type,
+                message: data.options.message,
+                position: data.options.position,
+                theme: data.options.theme,
+                duration: data.options.duration
+            });
+        }
+        return result;
+    }
+
+    getQueueLength(position) {
+        if (position) {
+            return this.queue.has(position) ? this.queue.get(position).length : 0;
+        }
+
+        let total = 0;
+        for (const queue of this.queue.values()) {
+            total += queue.length;
+        }
+        return total;
+    }
+
+    // Convenience methods
+    success(message, options = {}) {
+        return this.show(message, { ...options, type: 'success' });
+    }
+
+    error(message, options = {}) {
+        return this.show(message, { ...options, type: 'error' });
+    }
+
+    warning(message, options = {}) {
+        return this.show(message, { ...options, type: 'warning' });
+    }
+
+    info(message, options = {}) {
+        return this.show(message, { ...options, type: 'info' });
+    }
+
+    custom(options = {}) {
+        return this.show(options.message || '', options);
+    }
+}
+
+// Create global instance
+const notify = new NotyfyreManager();
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        notify.processLaravelNotifications();
+    });
+} else {
+    notify.processLaravelNotifications();
+}
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { NotyfyreManager, notify };
+}
+
+if (typeof window !== 'undefined') {
+    window.notify = notify;
+    window.NotyfyreManager = NotyfyreManager;
 }
