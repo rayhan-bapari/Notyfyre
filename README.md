@@ -278,7 +278,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## 🔒 Security
 
-If you discover any security related issues, please email rayhan.bapari@example.com instead of using the issue tracker.
+If you discover any security related issues, please email mdrayhanbapari02@gmail.com instead of using the issue tracker.
 
 ## 📄 License
 
@@ -287,7 +287,6 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 ## 🙏 Credits
 
 - [Rayhan Bapari](https://github.com/rayhan-bapari)
-- Inspired by [Toastr](https://github.com/CodeSeven/toastr)
 - All Contributors
 
 ## 📚 Documentation
