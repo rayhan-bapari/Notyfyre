@@ -17,10 +17,10 @@ class NotyfyreServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'notyfyre');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'notyfyre');
 
         $this->publishes([
-            __DIR__ . '/config/notyfyre.php' => config_path('notyfyre.php'),
+            __DIR__ . '/../config/notyfyre.php' => config_path('notyfyre.php'),
         ], 'notyfyre-config');
 
         $this->publishes([
@@ -32,7 +32,7 @@ class NotyfyreServiceProvider extends ServiceProvider
             __DIR__ . '/../resources/css' => public_path('vendor/notyfyre/css'),
         ], 'notyfyre-assets');
 
-        $this->mergeConfigFrom(__DIR__ . '/config/notyfyre.php', 'notyfyre');
+        $this->mergeConfigFrom(__DIR__ . '/../config/notyfyre.php', 'notyfyre');
 
         // Register Blade component
         Blade::component('notyfyre-container', NotyfyreContainer::class);
