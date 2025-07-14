@@ -1,0 +1,17 @@
+/vendor
+/.idea
+/.vscode
+/.vagrant
+.env
+.phpunit.result.cache
+composer.lock
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+*.swp
+*.swo
+.DS_Store
+.php_cs.cache
+.php-cs-fixer.cache
+node_modules/

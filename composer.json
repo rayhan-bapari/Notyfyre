@@ -1,0 +1,49 @@
+{
+    "name": "rayhan-bapari/notyfyre",
+    "description": "A beautiful toast notification package for Laravel applications",
+    "keywords": ["laravel", "notifications", "toast", "alerts", "flash-messages"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Rayhan Bapari",
+            "email": "rayhan.bapari@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+        "illuminate/session": "^9.0|^10.0|^11.0|^12.0",
+        "illuminate/view": "^9.0|^10.0|^11.0|^12.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0|^10.0",
+        "orchestra/testbench": "^7.0|^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "RayhanBapari\\Notyfyre\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RayhanBapari\\Notyfyre\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "RayhanBapari\\Notyfyre\\NotyfyreServiceProvider"
+            ],
+            "aliases": {
+                "Notyfyre": "RayhanBapari\\Notyfyre\\Facades\\Notyfyre"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "version": "1.0.0"
+}
