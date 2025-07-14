@@ -2,7 +2,7 @@
 
 All notable changes to `notyfyre` will be documented in this file.
 
-## [1.0.0] - 2025-01-XX
+## [1.0.3] - 2025-07-14
 
 ### Added
 
