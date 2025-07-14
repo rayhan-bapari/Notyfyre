@@ -17,7 +17,7 @@ class NotyfyreServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'notyfyre');
+        $this->loadViewsFrom(__DIR__ . '/resources/views', 'notyfyre');
 
         $this->publishes([
             __DIR__ . '/config/notyfyre.php' => config_path('notyfyre.php'),
